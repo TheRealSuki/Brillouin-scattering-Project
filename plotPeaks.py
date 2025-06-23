@@ -1,6 +1,10 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 import os
+import numpy as np
+
+def watts_to_dbm(watts):
+    return 10 * np.log10(watts) + 30
 
 # Load the CSV
 df = pd.read_csv('OSA_Measurements_Analysis/Session_1/all_peaks_summary.csv')
@@ -61,3 +65,41 @@ plt.legend()
 plt.tight_layout()
 plt.savefig(os.path.join(images_folder, 'power_vs_area.png'), dpi=300)
 # plt.show()  # Commented for fast batch processing
+
+# Plot 5: x = area, y = power
+plt.figure(figsize=(10,6))
+plt.scatter(watts_to_dbm(df['peak1_area_W_Hz']), power, label='Stokes Area', s=5)
+plt.scatter(watts_to_dbm(df['peak2_area_W_Hz']), power, label='Rayleigh Area', s=5)
+plt.scatter(watts_to_dbm(df['peak3_area_W_Hz']), power, label='Anti-Stokes Area', s=5)
+plt.ylabel('Power of 10% Beam Splitter (MicroWatt)')
+plt.xlabel('Peak Area (dBm)')
+plt.title('Beam Splitter Power vs Peak Areas')
+plt.legend()
+plt.tight_layout()
+plt.savefig(os.path.join(images_folder, 'areadBm_vs_power.png'), dpi=300)
+# plt.show()  # Commented for fast batch processing
+
+# Plot 6: x = power, y = area (axes swapped)
+plt.figure(figsize=(10,6))
+plt.scatter(power, watts_to_dbm(df['peak1_area_W_Hz']), label='Stokes Area', s=5)
+plt.scatter(power, watts_to_dbm(df['peak2_area_W_Hz']), label='Rayleigh Area', s=5)
+plt.scatter(power, watts_to_dbm(df['peak3_area_W_Hz']), label='Anti-Stokes Area', s=5)
+plt.xlabel('Power of 10% Beam Splitter (MicroWatt)')
+plt.ylabel('Peak Area (dBm)')
+plt.title('Peak Areas vs Beam Splitter Power')
+plt.legend()
+plt.tight_layout()
+plt.savefig(os.path.join(images_folder, 'power_vs_areadBm.png'), dpi=300)
+# plt.show()  # Commented for fast batch processing
+
+
+
+
+
+
+
+
+
+
+
+

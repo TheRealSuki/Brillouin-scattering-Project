@@ -559,7 +559,9 @@ def analyze_session2():
 				baseline = np.nan
 				areas = [np.nan]*5
 				print("Issue")
-
+			peak_amps.append(0)
+			peak_freqs.append(0)
+			areas.append(0)
 			row = peak_amps + peak_freqs + [baseline, just_name[:-4], r_squared] + areas
 			results.append(row)
 

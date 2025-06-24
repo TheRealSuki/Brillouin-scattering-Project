@@ -30,6 +30,14 @@ def six_lorentzian(x, x01, g1, A1, x02, g2, A2, x03, g3, A3,
             lorentzian(x, x05, g5, A5, 0) +
             lorentzian(x, x06, g6, A6, 0) +
             y0)
+def five_lorentzian(x, x01, g1, A1, x02, g2, A2, x03, g3, A3, 
+                   x04, g4, A4, x05, g5, A5, y0):
+    return (lorentzian(x, x01, g1, A1, 0) +
+            lorentzian(x, x02, g2, A2, 0) +
+            lorentzian(x, x03, g3, A3, 0) +
+            lorentzian(x, x04, g4, A4, 0) +
+            lorentzian(x, x05, g5, A5, 0) +
+            y0)
 def dbm_to_watts(dbm):
     return 10 ** ((dbm - 30) / 10)       
         
@@ -231,161 +239,336 @@ def analyze_session2():
 		powers_fit = powers[mask]
 		powers_fit_dbm = powers_fit
 
-		# Your 6 peak initial guesses
-		known_peaks = np.array([
-		    69712351.95,
-		    149676988.2,
-		    228087986.5,
-		    303891709,
-		    375634517.8,
-		    752622673.4
-		])
-		indices = [np.abs(freqs_fit - pk).argmin() for pk in known_peaks]
-		initial_freqs = freqs_fit[indices]
-		initial_amps = powers_fit[indices] - (-121)
-		initial_widths = [np.ptp(freqs_fit)/30]*6
+		if float(just_name[:-14]) > 800:
+			#6 peak initial guesses
+			known_peaks = np.array([
+			    69712351.95,
+			    149676988.2,
+			    228087986.5,
+			    303891709,
+			    375634517.8,
+			    752622673.4
+			])
+			indices = [np.abs(freqs_fit - pk).argmin() for pk in known_peaks]
+			initial_freqs = freqs_fit[indices]
+			initial_amps = powers_fit[indices] - (-121)
+			initial_widths = [np.ptp(freqs_fit)/30]*6
 
-		order = np.argsort(initial_freqs)
-		initial_freqs = initial_freqs[order]
-		initial_amps = initial_amps[order]
-		initial_widths = np.array(initial_widths)[order]
-		y0_guess = -121
+			order = np.argsort(initial_freqs)
+			initial_freqs = initial_freqs[order]
+			initial_amps = initial_amps[order]
+			initial_widths = np.array(initial_widths)[order]
+			y0_guess = -121
 
-		# 6 peaks: freq, width, amp for each, plus baseline
-		
-		p0 = [
-		    initial_freqs[0], initial_widths[0], initial_amps[0],
-		    initial_freqs[1], initial_widths[1], initial_amps[1],
-		    initial_freqs[2], initial_widths[2], initial_amps[2],
-		    initial_freqs[3], initial_widths[3], initial_amps[3],
-		    initial_freqs[4], initial_widths[4], initial_amps[4],
-		    initial_freqs[5], initial_widths[5], initial_amps[5],
-		    y0_guess
-		]
-		print(just_name)
-		print("---------------")
-		print(p0)
-		print("---------------")
-		center_tol = 1e6  # 1 MHz
-		lower_bounds = []
-		upper_bounds = []
-		for i in range(6):
-			if i < 5:
-				# Center
-				lower_bounds.append(initial_freqs[i] - center_tol)
-				# Width
-				lower_bounds.append(1e3)
-				# Amplitude
-				lower_bounds.append(1e-6)  # first 5 amplitudes must be positive
-			else:
-				lower_bounds.extend([initial_freqs[i] - 2e6, 1e3, 0])
-			#Center, Width, Amplitude - Upper Bounds
-			upper_bounds.append(initial_freqs[i] + center_tol)
-			upper_bounds.append(np.ptp(freqs_fit))
-			upper_bounds.append(np.max(powers_fit_dbm)*2)
-		lower_bounds.append(np.min(powers_fit_dbm) - 2)
-		upper_bounds.append(np.max(powers_fit_dbm) + 2)
-
-		try:
-
-			popt, _ = curve_fit(six_lorentzian, freqs_fit, powers_fit_dbm, p0=p0, maxfev=100000)
-			peak_freqs = [popt[0], popt[3], popt[6], popt[9], popt[12], popt[15]]
-			peak_amps = [popt[2], popt[5], popt[8], popt[11], popt[14], popt[17]]
-			baseline = popt[18]
-
-
-			# Dense grid for fit and analysis
-			dense_x = np.linspace(freqs_fit.min(), freqs_fit.max(), 10000)
-
-			fit_y = six_lorentzian(dense_x, *popt)
-
-
+			# 6 peaks: freq, width, amp for each, plus baseline
 			
-			maxima_idx = argrelextrema(fit_y, np.greater)[0]
-			minima_idx = argrelextrema(fit_y, np.less)[0]
-			peak_xs = dense_x[maxima_idx]
-			min_xs = dense_x[minima_idx]
+			p0 = [
+			    initial_freqs[0], initial_widths[0], initial_amps[0],
+			    initial_freqs[1], initial_widths[1], initial_amps[1],
+			    initial_freqs[2], initial_widths[2], initial_amps[2],
+			    initial_freqs[3], initial_widths[3], initial_amps[3],
+			    initial_freqs[4], initial_widths[4], initial_amps[4],
+			    initial_freqs[5], initial_widths[5], initial_amps[5],
+			    y0_guess
+			]
+			#Bit where the extra peak starts appearing
+			center_tol = 10e6     # 1 MHz
+			amp_max   = (np.max(powers_fit_dbm) - y0_guess) * 2
+			width_max = np.ptp(freqs_fit)
+
+			lower_bounds = []
+			upper_bounds = []
+			for f0, w0, a0 in zip(initial_freqs, initial_widths, initial_amps):
+				if f0 == 375634517.766497:
+					lower_bounds += [f0 - center_tol*1.1,  # freq  >= f0-1 MHz
+							5e3,              # width >= 1 kHz
+							a0*0.85]           # amplitude >= 
+					upper_bounds += [f0 + center_tol*1.1,  # freq  <= f0+1 MHz
+							width_max*3,        # width <= full span
+							amp_max*3]          # amplitude <= 2×max
+				else:
+					lower_bounds += [f0 - center_tol,  # freq  >= f0-1 MHz
+							1e3,              # width >= 1 kHz
+							a0*0.3]           # amplitude >=  10% of guess (or 0)
+					upper_bounds += [f0 + center_tol,  # freq  <= f0+1 MHz
+							width_max,        # width <= full span
+							amp_max*1.5]          # amplitude <= 2×max
+			# finally, bounds for the baseline y0:
+			lower_bounds.append(y0_guess - 5)      # e.g. 5 dB below guess
+			upper_bounds.append(y0_guess + 5)      # e.g. 5 dB above guess
+			try:
+
+				popt, _ = curve_fit(
+				    six_lorentzian, freqs_fit, powers_fit_dbm,
+				    p0=p0, bounds=(lower_bounds, upper_bounds),
+				    maxfev=100000
+				)
+				fit_vals  = six_lorentzian(freqs_fit, *popt)
+				residuals = powers_fit_dbm - fit_vals
+				ss_res = np.sum(residuals**2)
+				ss_tot = np.sum((powers_fit_dbm - np.mean(powers_fit_dbm))**2)
+				r_squared = 1 - (ss_res/ss_tot)
+				#Calculation of the r^2 to see how good of a fit it
+				peak_freqs = [popt[0], popt[3], popt[6], popt[9], popt[12], popt[15]]
+				peak_amps = [popt[2], popt[5], popt[8], popt[11], popt[14], popt[17]]
+				baseline = popt[18]
 
 
-			plt.figure(figsize=(8,5))
-			plt.plot(dense_x, fit_y, label='6-Lorentzian Fit')
-			plt.plot(peak_xs, fit_y[maxima_idx], 'ro', label='Peaks')
-			plt.plot(min_xs, fit_y[minima_idx], 'go', label='Minima')
-			plt.scatter(freqs_fit, powers_fit_dbm, s=10, label='Data', alpha=0.7)
-			plt.title(f'Fit for: {just_name}')
-			plt.xlabel('Frequency (Hz)')
-			plt.ylabel('Power (dBm)')
-			plt.legend()
-			plt.tight_layout()
-			save_path = os.path.join(image_folder, f'{just_name}_dBm.png')
-			plt.savefig(save_path, dpi=180)
-			plt.close()
+				# Dense grid for fit and analysis
+				dense_x = np.linspace(freqs_fit.min(), freqs_fit.max(), 10000)
 
-			# Use minima to define integration regions for 6 peaks = 5 minima boundaries
-			# If less than 5 minima, fill with equally spaced boundaries
+				fit_y = six_lorentzian(dense_x, *popt)
+
+
+				
+				maxima_idx = argrelextrema(fit_y, np.greater)[0]
+				minima_idx = argrelextrema(fit_y, np.less)[0]
+				peak_xs = dense_x[maxima_idx]
+				min_xs = dense_x[minima_idx]
+
+
+				plt.figure(figsize=(8,5))
+				plt.plot(dense_x, fit_y, label='6-Lorentzian Fit')
+				plt.plot(peak_xs, fit_y[maxima_idx], 'ro', label='Peaks')
+				plt.plot(min_xs, fit_y[minima_idx], 'go', label='Minima')
+				plt.scatter(freqs_fit, powers_fit_dbm, s=10, label='Data', alpha=0.7)
+				plt.title(f'Fit for: {just_name}')
+				plt.xlabel('Frequency (Hz)')
+				plt.ylabel('Power (dBm)')
+				plt.legend()
+				plt.tight_layout()
+				save_path = os.path.join(image_folder, f'{just_name}_dBm.png')
+				plt.savefig(save_path, dpi=180)
+				plt.close()
+
+				# Use minima to define integration regions for 6 peaks = 5 minima boundaries
+				# If less than 5 minima, fill with equally spaced boundaries
+				
+				if len(min_xs) >= 5:
+					boundaries = [dense_x[0]] + list(min_xs[:5]) + [dense_x[-1]]
+				else:
+					# fallback: equally spaced boundaries
+					boundaries = list(np.linspace(dense_x[0], dense_x[-1], 7))
+				fit_y_watt = dbm_to_watts(fit_y)
+				baseline_watt = dbm_to_watts(baseline)
+				net_fit_y = fit_y_watt - baseline_watt
+
+				idxs = [np.searchsorted(dense_x, b) for b in boundaries]
+
+				# Plot with integration regions for all 6
+				plt.figure(figsize=(10, 6))
+				plt.plot(dense_x, fit_y_watt, label='Fitted curve (Watts)', color='blue')
+				plt.plot(dense_x, np.full_like(dense_x, baseline_watt), 
+				     label='Baseline (Watts)', color='gray', linestyle='--')
+				plt.plot(dense_x, net_fit_y, label='Net fit (Watts - baseline)', color='red')
+
+				colors = ['lightblue', 'lightgreen', 'navajowhite', 'pink', 'plum', 'lightcoral']
+				for i in range(6):
+					plt.axvspan(dense_x[idxs[i]], dense_x[idxs[i+1]], color=colors[i], alpha=0.3, label=f'Peak {i+1} region')
+
+				for i in range(1, 6):
+					plt.axvline(dense_x[idxs[i]], color='gray', linestyle=':', label=f'Boundary {i}')
+
+				plt.xlabel('Frequency (Hz)')
+				plt.ylabel('Power (Watt)')
+				plt.title('Fit and Integration Regions (in Watts)')
+				plt.legend(loc='upper right', fontsize=8)
+				plt.tight_layout()
+				max_display = max(np.max(fit_y_watt), np.max(net_fit_y)) * 1.1
+				plt.ylim(bottom=0, top=max_display)
+
+				save_path = os.path.join(image_folder, f'{just_name}_Watt.png')
+				plt.savefig(save_path, dpi=180)
+				plt.close()
+
+				# Integrate area under each peak
+				areas = []
+				for i in range(6):
+					area = simps(net_fit_y[idxs[i]:idxs[i+1]], dense_x[idxs[i]:idxs[i+1]])
+					areas.append(area)
+				
+
+			except Exception as e:
+				peak_freqs = [np.nan]*6
+				peak_amps = [np.nan]*6
+				baseline = np.nan
+				areas = [np.nan]*6
+				print("Issue")
+
+			row = peak_amps + peak_freqs + [baseline, just_name[:-4], r_squared] + areas
+			results.append(row)
+
+		else:
+			# 5 peak initial guesses
+			known_peaks = np.array([
+			    69712351.95,
+			    149676988.2,
+			    228087986.5,
+			    303891709,
+			    375634517.8
+			])
+			indices = [np.abs(freqs_fit - pk).argmin() for pk in known_peaks]
+			initial_freqs = freqs_fit[indices]
+			initial_amps = powers_fit[indices] - (-121)
+			initial_widths = [np.ptp(freqs_fit)/30]*5
+
+			order = np.argsort(initial_freqs)
+			initial_freqs = initial_freqs[order]
+			initial_amps = initial_amps[order]
+			initial_widths = np.array(initial_widths)[order]
+			y0_guess = -121
+
+			# 5 peaks: freq, width, amp for each, plus baseline
 			
-			if len(min_xs) >= 5:
-				boundaries = [dense_x[0]] + list(min_xs[:5]) + [dense_x[-1]]
-			else:
-				# fallback: equally spaced boundaries
-				boundaries = list(np.linspace(dense_x[0], dense_x[-1], 7))
-			fit_y_watt = dbm_to_watts(fit_y)
-			baseline_watt = dbm_to_watts(baseline)
-			net_fit_y = fit_y_watt - baseline_watt
+			p0 = [
+			    initial_freqs[0], initial_widths[0], initial_amps[0],
+			    initial_freqs[1], initial_widths[1], initial_amps[1],
+			    initial_freqs[2], initial_widths[2], initial_amps[2],
+			    initial_freqs[3], initial_widths[3], initial_amps[3],
+			    initial_freqs[4], initial_widths[4], initial_amps[4],
+			    y0_guess
+			]
+			#Bit where the extra peak does not appear
+			center_tol = 10e6     # 1 MHz
+			amp_max   = (np.max(powers_fit_dbm) - y0_guess) * 2
+			width_max = np.ptp(freqs_fit)
 
-			idxs = [np.searchsorted(dense_x, b) for b in boundaries]
+			lower_bounds = []
+			upper_bounds = []
+			for f0, w0, a0 in zip(initial_freqs, initial_widths, initial_amps):
+				if f0 == 375634517.766497:
+					lower_bounds += [f0 - center_tol*1.2,  # freq  >= f0-1 MHz
+							1e3,              # width >= 1 kHz
+							a0]           # amplitude >= 
+					upper_bounds += [f0 + center_tol*1.2,  # freq  <= f0+1 MHz
+							width_max*4,        # width <= full span
+							amp_max]          # amplitude <= 2×max
+				else:
+					lower_bounds += [f0 - center_tol*1.2,  # freq  >= f0-1 MHz
+							1e3,              # width >= 1 kHz
+							a0*0.4]           # amplitude >=  10% of guess (or 0)
+					upper_bounds += [f0 + center_tol*1.2,  # freq  <= f0+1 MHz
+							width_max,        # width <= full span
+							amp_max*1.5]          # amplitude <= 2×max
+			# finally, bounds for the baseline y0:
+			lower_bounds.append(y0_guess - 5)      # e.g. 5 dB below guess
+			upper_bounds.append(y0_guess + 5)      # e.g. 5 dB above guess
+			try:
 
-			# Plot with integration regions for all 6
-			plt.figure(figsize=(10, 6))
-			plt.plot(dense_x, fit_y_watt, label='Fitted curve (Watts)', color='blue')
-			plt.plot(dense_x, np.full_like(dense_x, baseline_watt), 
-			     label='Baseline (Watts)', color='gray', linestyle='--')
-			plt.plot(dense_x, net_fit_y, label='Net fit (Watts - baseline)', color='red')
+				popt, _ = curve_fit(
+				    five_lorentzian, freqs_fit, powers_fit_dbm,
+				    p0=p0, bounds=(lower_bounds, upper_bounds),
+				    maxfev=100000
+				)
+				#Calculation of r^2 - see how good of a fit it is.
+				fit_vals  = five_lorentzian(freqs_fit, *popt)
+				residuals = powers_fit_dbm - fit_vals
+				ss_res = np.sum(residuals**2)
+				ss_tot = np.sum((powers_fit_dbm - np.mean(powers_fit_dbm))**2)
+				r_squared = 1 - (ss_res/ss_tot)
+				
+				peak_freqs = [popt[0], popt[3], popt[6], popt[9], popt[12]]
+				peak_amps = [popt[2], popt[5], popt[8], popt[11], popt[14]]
+				baseline = popt[15]
 
-			colors = ['lightblue', 'lightgreen', 'navajowhite', 'pink', 'plum', 'lightcoral']
-			for i in range(6):
-				plt.axvspan(dense_x[idxs[i]], dense_x[idxs[i+1]], color=colors[i], alpha=0.3, label=f'Peak {i+1} region')
 
-			for i in range(1, 6):
-				plt.axvline(dense_x[idxs[i]], color='gray', linestyle=':', label=f'Boundary {i}')
+				# Dense grid for fit and analysis
+				dense_x = np.linspace(freqs_fit.min(), freqs_fit.max(), 10000)
 
-			plt.xlabel('Frequency (Hz)')
-			plt.ylabel('Power (Watt)')
-			plt.title('Fit and Integration Regions (in Watts)')
-			plt.legend(loc='upper right', fontsize=8)
-			plt.tight_layout()
-			
-			#MANUALLY ADDING A MAX PLOT, SO IT IS VISIBLE AT ALL TIMES
-			max_dbm = -85
-			max_watt = dbm_to_watts(max_dbm)
-			plt.ylim(bottom=0, top=max_watt * 1.1)
-			#MANUAL PART END
+				fit_y = five_lorentzian(dense_x, *popt)
 
-			save_path = os.path.join(image_folder, f'{just_name}_Watt.png')
-			plt.savefig(save_path, dpi=180)
-			plt.close()
 
-			# Integrate area under each peak
-			areas = []
-			for i in range(6):
-				area = simps(net_fit_y[idxs[i]:idxs[i+1]], dense_x[idxs[i]:idxs[i+1]])
-				areas.append(area)
-			
+				
+				maxima_idx = argrelextrema(fit_y, np.greater)[0]
+				minima_idx = argrelextrema(fit_y, np.less)[0]
+				peak_xs = dense_x[maxima_idx]
+				min_xs = dense_x[minima_idx]
 
-		except Exception as e:
-			peak_freqs = [np.nan]*6
-			peak_amps = [np.nan]*6
-			baseline = np.nan
-			areas = [np.nan]*6
-			print("Issue")
 
-		row = peak_amps + peak_freqs + [baseline, just_name[:-4]] + areas
-		results.append(row)
+				plt.figure(figsize=(8,5))
+				plt.plot(dense_x, fit_y, label='5-Lorentzian Fit')
+				plt.plot(peak_xs, fit_y[maxima_idx], 'ro', label='Peaks')
+				plt.plot(min_xs, fit_y[minima_idx], 'go', label='Minima')
+				plt.scatter(freqs_fit, powers_fit_dbm, s=10, label='Data', alpha=0.7)
+				plt.title(f'Fit for: {just_name}')
+				plt.xlabel('Frequency (Hz)')
+				plt.ylabel('Power (dBm)')
+				plt.legend()
+				plt.tight_layout()
+				save_path = os.path.join(image_folder, f'{just_name}_dBm.png')
+				plt.savefig(save_path, dpi=180)
+				plt.close()
+
+				# Use minima to define integration regions for 5 peaks = 4 minima boundaries
+				# If less than 4 minima, fill with equally spaced boundaries
+				
+				if len(min_xs) >= 4:
+					boundaries = [dense_x[0]] + list(min_xs[:5]) + [dense_x[-1]]
+				else:
+					# fallback: equally spaced boundaries
+					boundaries = list(np.linspace(dense_x[0], dense_x[-1], 7))
+				fit_y_watt = dbm_to_watts(fit_y)
+				baseline_watt = dbm_to_watts(baseline)
+				net_fit_y = fit_y_watt - baseline_watt
+
+				idxs = [np.searchsorted(dense_x, b) for b in boundaries]
+
+				# Plot with integration regions for all 5
+				plt.figure(figsize=(10, 6))
+				plt.plot(dense_x, fit_y_watt, label='Fitted curve (Watts)', color='blue')
+				plt.plot(dense_x, np.full_like(dense_x, baseline_watt), 
+				     label='Baseline (Watts)', color='gray', linestyle='--')
+				plt.plot(dense_x, net_fit_y, label='Net fit (Watts - baseline)', color='red')
+
+				colors = ['lightblue', 'lightgreen', 'navajowhite', 'pink', 'plum', 'lightcoral']
+				for i in range(5):
+					plt.axvspan(dense_x[idxs[i]], dense_x[idxs[i+1]], color=colors[i], alpha=0.3, label=f'Peak {i+1} region')
+
+				for i in range(1, 5):
+					plt.axvline(dense_x[idxs[i]], color='gray', linestyle=':', label=f'Boundary {i}')
+
+				plt.xlabel('Frequency (Hz)')
+				plt.ylabel('Power (Watt)')
+				plt.title('Fit and Integration Regions (in Watts)')
+				plt.legend(loc='upper right', fontsize=8)
+				plt.tight_layout()
+				'''
+				#MANUALLY ADDING A MAX PLOT, SO IT IS VISIBLE AT ALL TIMES
+				max_dbm = -85
+				max_watt = dbm_to_watts(max_dbm)
+				plt.ylim(bottom=0, top=max_watt * 1.1)
+				#MANUAL PART END
+				'''
+				max_display = max(np.max(fit_y_watt), np.max(net_fit_y)) * 1.1
+				plt.ylim(bottom=0, top=max_display)
+
+				save_path = os.path.join(image_folder, f'{just_name}_Watt.png')
+				plt.savefig(save_path, dpi=180)
+				plt.close()
+
+				# Integrate area under each peak
+				areas = []
+				for i in range(5):
+					area = simps(net_fit_y[idxs[i]:idxs[i+1]], dense_x[idxs[i]:idxs[i+1]])
+					areas.append(area)
+				
+
+			except Exception as e:
+				peak_freqs = [np.nan]*5
+				peak_amps = [np.nan]*5
+				baseline = np.nan
+				areas = [np.nan]*5
+				print("Issue")
+
+			row = peak_amps + peak_freqs + [baseline, just_name[:-4], r_squared] + areas
+			results.append(row)
+
+
 
 	columns = (
 	[f'peak{i+1}_amp' for i in range(6)] +
 	[f'peak{i+1}_freq' for i in range(6)] +
-	['baseline', 'powerOf10PercentBeamSplitter(MicroWatt)'] +
+	['baseline', 'powerOf10PercentBeamSplitter(MicroWatt)', 'r_squared for dBm Fit'] +
 	[f'peak{i+1}_area_W_Hz' for i in range(6)]
 	)
 	df = pd.DataFrame(results, columns=columns)

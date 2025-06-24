@@ -310,6 +310,7 @@ def analyze_session2():
 				r_squared = 1 - (ss_res/ss_tot)
 				#Calculation of the r^2 to see how good of a fit it
 				peak_freqs = [popt[0], popt[3], popt[6], popt[9], popt[12], popt[15]]
+				peak_widths = [popt[1], popt[4], popt[7], popt[10], popt[13], popt[16]]
 				peak_amps = [popt[2], popt[5], popt[8], popt[11], popt[14], popt[17]]
 				baseline = popt[18]
 
@@ -395,7 +396,7 @@ def analyze_session2():
 				areas = [np.nan]*6
 				print("Issue")
 
-			row = peak_amps + peak_freqs + [baseline, just_name[:-4], r_squared] + areas
+			row = peak_amps + peak_freqs + peak_widths + [baseline, float(just_name[:-14]), r_squared] + areas
 			results.append(row)
 
 		else:
@@ -468,6 +469,7 @@ def analyze_session2():
 				r_squared = 1 - (ss_res/ss_tot)
 				
 				peak_freqs = [popt[0], popt[3], popt[6], popt[9], popt[12]]
+				peak_widths = [popt[1], popt[4], popt[7], popt[10], popt[13]]
 				peak_amps = [popt[2], popt[5], popt[8], popt[11], popt[14]]
 				baseline = popt[15]
 
@@ -562,7 +564,8 @@ def analyze_session2():
 			peak_amps.append(0)
 			peak_freqs.append(0)
 			areas.append(0)
-			row = peak_amps + peak_freqs + [baseline, just_name[:-4], r_squared] + areas
+			peak_widths.append(0)
+			row = peak_amps + peak_freqs + peak_widths + [baseline, float(just_name[:-14]), r_squared] + areas
 			results.append(row)
 
 
@@ -570,6 +573,7 @@ def analyze_session2():
 	columns = (
 	[f'peak{i+1}_amp' for i in range(6)] +
 	[f'peak{i+1}_freq' for i in range(6)] +
+	[f'peak{i+1}_width' for i in range(6)] +
 	['baseline', 'powerOf10PercentBeamSplitter(MicroWatt)', 'r_squared for dBm Fit'] +
 	[f'peak{i+1}_area_W_Hz' for i in range(6)]
 	)

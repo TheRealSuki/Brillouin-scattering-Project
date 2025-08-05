@@ -171,7 +171,7 @@ def analyze_session3():
     # --- Plot 2: The Main Fit Plot ---
     ax = axs[0, 1]
     ax.plot(exp_freq_hz / 1e6, exp_psd_au, 'r-', label='Experimental Data (from g2)', alpha=0.4)
-    ax.plot(exp_freq_hz / 1e6, initial_guess_spectrum, 'b:', linewidth=2, label='Your Initial Guess')
+    ax.plot(exp_freq_hz / 1e6, initial_guess_spectrum, 'b:', linewidth=2, label='Initial Guess')
     if fit_successful:
         ax.plot(exp_freq_hz / 1e6, final_fit_spectrum, 'k--', linewidth=2.5, label='Final Optimized Fit')
     ax.set_title('2. Experimental Spectrum & Lorentzian Fit')

@@ -3,7 +3,6 @@ import glob
 import numpy as np
 import pandas as pd
 from scipy.optimize import curve_fit
-from scipy.integrate import simps
 from scipy.signal import argrelextrema
 import matplotlib.pyplot as plt
 import argparse
@@ -175,9 +174,9 @@ def analyze_session1():
 			plt.close()
 			#plt.show()
 			# -------------------------------------
-			area1 = simps(net_fit_y[:idx1], dense_x[:idx1])
-			area2 = simps(net_fit_y[idx1:idx2], dense_x[idx1:idx2])
-			area3 = simps(net_fit_y[idx2:], dense_x[idx2:])
+			area1 = simpson(net_fit_y[:idx1], dense_x[:idx1])
+			area2 = simpson(net_fit_y[idx1:idx2], dense_x[idx1:idx2])
+			area3 = simpson(net_fit_y[idx2:], dense_x[idx2:])
 		except Exception as e:
 			peak_freqs = [np.nan, np.nan, np.nan]
 			peak_amps = [np.nan, np.nan, np.nan]
@@ -385,7 +384,7 @@ def analyze_session2():
 				# Integrate area under each peak
 				areas = []
 				for i in range(6):
-					area = simps(net_fit_y[idxs[i]:idxs[i+1]], dense_x[idxs[i]:idxs[i+1]])
+					area = simpson(net_fit_y[idxs[i]:idxs[i+1]], dense_x[idxs[i]:idxs[i+1]])
 					areas.append(area)
 				
 
@@ -551,7 +550,7 @@ def analyze_session2():
 				# Integrate area under each peak
 				areas = []
 				for i in range(5):
-					area = simps(net_fit_y[idxs[i]:idxs[i+1]], dense_x[idxs[i]:idxs[i+1]])
+					area = simpson(net_fit_y[idxs[i]:idxs[i+1]], dense_x[idxs[i]:idxs[i+1]])
 					areas.append(area)
 				
 
@@ -586,32 +585,25 @@ def analyze_session2():
 
 	print("Analysis and integration complete! Results saved to:", output_path)
 
-def analyze_session3():
-    # Session 3 analysis code goes here
-    pass
 
+
+
+# --- Main execution block with command-line argument parsing ---
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--session', type=str, default='session_1', choices=['session_1', 'session_2'],
+    parser = argparse.ArgumentParser(
+        description='Analyze photon statistics and heterodyne data from different experimental sessions.'
+    )
+    parser.add_argument('--session', type=str, default='session_1', 
+                        choices=['session_1', 'session_2'],
                         help='Choose which session to analyze (default: session_1)')
     args = parser.parse_args()
 
     if args.session == 'session_1':
-        # Session 1 code
         print("Running code for SESSION 1")
         analyze_session1()
     elif args.session == 'session_2':
-        # Session 2 code
         print("Running code for SESSION 2")
         analyze_session2()
-
-
-
-
-
-
-
-
 
 
 

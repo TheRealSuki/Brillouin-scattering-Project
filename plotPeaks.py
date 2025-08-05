@@ -285,11 +285,136 @@ def analyseSessionExtra_2():
 
 	print(f"Brillouin linewidth = {delta_nu_B:.2f} Hz")
 	'''
+def plotg20comparison():
+    """
+    Analyzes multiple folders of g^(2)(τ) data to find the highest g^(2)(0)
+    achieved with each filter setup.
+    """
+    # =========================================================================
+    # 1. Define the Folder Paths and Names for Each Filter Setup
+    # =========================================================================
+    
+    base_path = 'Measurements/Session_3_Photon_Statistics_And_Heterodyne/'
+    
+    filter_setups = {
+        '1GHz Filter': os.path.join(base_path, '3_1GHz_187microWatt_slightly_lasing/data_photon_stat'),
+        'Cavity Filter': os.path.join(base_path, '2_Cavity_Filter_focusing_on_one_mode/data_photon_stat'),
+        'Cavity + 1GHz Filters': os.path.join(base_path, '1_Cavity_and_1GHz_Filters/data_photon_stat')
+    }
+    
+    # Dictionary to store the best result for each filter
+    best_results = {}
+
+    # =========================================================================
+    # 2. Loop Through Each Folder and Analyze All CSV Files
+    # =========================================================================
+    
+    for filter_name, folder_path in filter_setups.items():
+        print(f"\n--- Analyzing Folder: {filter_name} ---")
+        
+        if not os.path.isdir(folder_path):
+            print(f"Warning: Folder not found at {folder_path}. Skipping.")
+            continue
+            
+        highest_g20 = 0
+        best_file = None
+        
+        # Get a list of all csv files in the directory
+        try:
+            csv_files = [f for f in os.listdir(folder_path) if f.endswith('.csv')]
+            if not csv_files:
+                print("No CSV files found in this directory.")
+                continue
+        except FileNotFoundError:
+            print(f"Error: Could not access folder path: {folder_path}")
+            continue
+
+        for file_name in csv_files:
+            full_path = os.path.join(folder_path, file_name)
+            
+            try:
+                # Load the data using pandas
+                data = pd.read_csv(full_path, header=0)
+                data.columns = ['Time_ns', 'Counts']
+                
+                # --- Normalize the data to get g^(2)(τ) ---
+                # Find the baseline by averaging the last 25% of the data
+                baseline_window = int(len(data) * 0.25)
+                if baseline_window == 0: continue # Skip tiny files
+                
+                baseline_counts = data['Counts'][-baseline_window:].mean()
+                if baseline_counts == 0: continue # Avoid division by zero
+                
+                g2_experimental = data['Counts'] / baseline_counts
+                
+                # The peak g^(2)(0) is the maximum value of the normalized data
+                current_g20 = g2_experimental.max()
+                
+                # Check if this is the best result for this folder so far
+                if current_g20 > highest_g20:
+                    highest_g20 = current_g20
+                    best_file = file_name
+                    
+            except Exception as e:
+                print(f"Could not process file {file_name}. Error: {e}")
+        
+        # Store the best result for this filter setup
+        if best_file:
+            best_results[filter_name] = {'g20': highest_g20, 'file': best_file}
+            print(f"Highest g^(2)(0) found: {highest_g20:.3f} in file: {best_file}")
+        else:
+            print("No valid data files could be processed in this folder.")
+
+    # =========================================================================
+    # 3. Manually Add Additional Results
+    # =========================================================================
+    print("\nAdding manual data points...")
+    best_results['1GHz and 4GHz Filter'] = {'g20': 1.51, 'file': 'Manual Entry'}
+    best_results['AOS Filter (10GHz and 30 GHz Combinations)'] = {'g20': 1.0, 'file': 'Manual Entry'}
 
 
+    # =========================================================================
+    # 4. Print Summary and Plot the Results
+    # =========================================================================
+    
+    print("\n\n--- Final Summary ---")
+    if not best_results:
+        print("No results found.")
+        return
+        
+    for filter_name, result in best_results.items():
+        print(f"Filter: {filter_name:<35} | Highest g^(2)(0): {result['g20']:.4f} | File: {result['file']}")
+    
+    # --- Create a Bar Chart for Visual Comparison ---
+    names = list(best_results.keys())
+    values = [result['g20'] for result in best_results.values()]
+    
+    # Add more colors for the new bars
+    colors = ['skyblue', 'lightgreen', 'salmon', 'gold', 'orchid']
+
+    plt.figure(figsize=(12, 7))
+    bars = plt.bar(names, values, color=colors[:len(names)])
+    
+    # Add the g^(2)(0) value on top of each bar
+    for bar in bars:
+        yval = bar.get_height()
+        plt.text(bar.get_x() + bar.get_width()/2.0, yval, f'{yval:.3f}', va='bottom', ha='center')
+
+    plt.title('Maximum Achieved $g^{(2)}(0)$ by Filter Configuration', fontsize=16)
+    plt.ylabel('$g^{(2)}(0)$ Value', fontsize=12)
+    plt.xticks(rotation=15, ha="right") # Rotate labels slightly to prevent overlap
+    plt.ylim(top=2.1) # Set y-axis limit slightly above the theoretical max of 2
+    plt.grid(axis='y', linestyle='--', alpha=0.7)
+    
+    plt.tight_layout()
+    plt.show()
+
+# --- Main execution block ---
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('--session', type=str, default='session_1', choices=['session_1', 'session_2', 'session_2_freq'],
+    # Choices list
+    parser.add_argument('--session', type=str, default='session_1', 
+                        choices=['session_1', 'session_2', 'session_2_freq', 'plotg20comparison'],
                         help='Choose which session to analyze (default: session_1)')
     args = parser.parse_args()
 
@@ -302,9 +427,13 @@ if __name__ == "__main__":
         print("Running code for SESSION 2")
         analyseSession_2()
     elif args.session == 'session_2_freq':
-    	# Extra session 2
-    	print("Running code for Extra Session 2")
-    	analyseSessionExtra_2()
+        # Extra session 2
+        print("Running code for Extra Session 2")
+        analyseSessionExtra_2()
+    elif args.session == 'plotg20comparison':
+        # Plot g2 comparison
+        print("Running code for g2 comparison")
+        plotg20comparison()
 
 
 

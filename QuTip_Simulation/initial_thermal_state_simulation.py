@@ -516,10 +516,277 @@ def calculate_g2_and_spectrum_differentHilbertSpaces():
     plt.show()
 
 
+def run_simulation(p):
+    """
+    Runs the full simulation and analysis based on the provided parameters.
+    """
+    # --- 1. Calculate intermediate variables from parameters ---
+    k_j = p['k_j_real'] + 1j * p['k_j_imag']
+    chi_s = -p['alpha_s']/2 + 1j * p['Delta_s']
+    chi_m = -p['alpha_m']/2
+
+    A = (chi_s + chi_m) / 2
+    # Use np.lib.scimath.sqrt for complex square roots
+    # Note: The user's notes had a minus sign under the root, but standard solutions
+    # for this type of system (Bogoliubov transformation) use a plus sign.
+    # Using the standard form here.
+    D = np.lib.scimath.sqrt((chi_s - chi_m)**2 + 4 * k_j * np.conj(k_j))
+
+    lambda_p = A + D/2
+    lambda_m = A - D/2
+
+    # --- CORRECTED COEFFICIENT DEFINITIONS ---
+    # Coefficients P, Q, L as per the user's notes.
+    # Added a small epsilon to avoid division by zero.
+    epsilon = 1e-15
+    # P has (chi_s - A + D/2) in the denominator
+    P_denom = chi_s - A - D/2
+    # Q has (chi_s - A - D/2) in the denominator
+    Q_denom = chi_s - A + D/2
+    
+    P = k_j / (P_denom + epsilon)
+    Q = k_j / (Q_denom + epsilon)
+    
+    # The definition of L depends on the P and Q from the eigenvector matrix,
+    # which can be different from the P and Q in the final solution coefficients.
+    # For a standard solution v(z) = G(z)v(0), L is implicitly handled by the
+    # matrix components of G(z). Here, we stick to the user's formula.
+    L = 1 / (P - Q + epsilon)
+
+    # --- 2. Simulate the evolution of a(z) ---
+    z = np.linspace(0, p['z_max'], p['num_points'])
+
+    # The formula from the user's notes for a_s_j(z).
+    # Based on the structure, we assume the second term is multiplied by b0_dagger.
+    term1 = (-P * np.exp(lambda_p * z) + Q * np.exp(lambda_m * z)) * p['a0']
+    term2 = (P * Q * (-np.exp(lambda_p * z) + np.exp(lambda_m * z))) * p['b0_dagger']
+    a_z = L * (term1 + term2)
+
+    # --- 3. First-Order Coherence g^(1)(tau) and Power Spectrum ---
+    # Calculate g^(1) via normalized autocorrelation
+    autocorr = np.correlate(a_z, a_z, mode='full')
+    g1 = autocorr / np.sum(np.abs(a_z)**2)
+    tau = np.arange(-p['num_points'] + 1, p['num_points']) * (z[1] - z[0])
+
+    # Power Spectrum S(omega) is the Fourier Transform of g1
+    S_omega = fftshift(fft(fftshift(g1)))
+    omega = fftshift(fftfreq(len(tau), d=(z[1] - z[0]))) * 2 * np.pi
+
+     # --- 4. Calculate g^(2)(tau) from a(z) ---
+    # This now explicitly calculates the time-averaged intensity correlation.
+    I_z = np.abs(a_z)**2
+    mean_I = np.mean(I_z)
+    
+    # Calculate the intensity autocorrelation for the numerator of g^(2)
+    autocorr_I = np.correlate(I_z, I_z, mode='full')
+     # Define the integer lags for normalization
+    tau_indices = np.arange(-p['num_points'] + 1, p['num_points'])
+    
+    # Normalize the autocorrelation to get the time average <I(t)I(t+tau)>
+    # The number of overlapping points for each lag tau is N - |tau|
+    normalization = p['num_points'] - np.abs(tau_indices)
+    numerator_g2 = autocorr_I / normalization
+    
+    # Calculate g^(2) using the definition
+    denominator_g2 = mean_I**2
+    g2 = numerator_g2 / denominator_g2
+
+    # --- 5. Plotting ---
+    plt.style.use('seaborn-v0_8-darkgrid')
+    fig = plt.figure(figsize=(12, 16))
+    fig.suptitle('Direct Simulation and Coherence Analysis', fontsize=16)
+
+    # Plot a(z)
+    ax1 = fig.add_subplot(3, 2, 1)
+    ax1.plot(z, np.abs(a_z), 'r-', label='$|a(z)|$')
+    ax1.set_title('Amplitude Evolution $|a(z)|$')
+    ax1.set_xlabel('z')
+    ax1.set_ylabel('Magnitude')
+    ax1.legend()
+
+    ax2 = fig.add_subplot(3, 2, 2)
+    ax2.plot(z, np.real(a_z), 'b-', label='Re[$a(z)$]')
+    ax2.plot(z, np.imag(a_z), 'g--', label='Im[$a(z)$]')
+    ax2.set_title('Real and Imaginary Parts')
+    ax2.set_xlabel('z')
+    ax2.set_ylabel('Amplitude')
+    ax2.legend()
+    
+    # Plot g^(1)(tau)
+    ax3 = fig.add_subplot(3, 2, 3)
+    ax3.plot(tau, np.abs(g1), 'm-')
+    ax3.set_title('First-Order Coherence $|g^{(1)}(\\tau)|$')
+    ax3.set_xlabel('$\\tau$ (Delay)')
+    ax3.set_ylabel('Magnitude')
+    ax3.set_xlim(-p['z_max']/2, p['z_max']/2)
+
+    # Plot Power Spectrum
+    ax4 = fig.add_subplot(3, 2, 4)
+    ax4.plot(omega, S_omega, 'c-')
+    ax4.set_title('Power Spectrum $S(\\omega)$')
+    ax4.set_xlabel('$\\omega$ (Frequency)')
+    ax4.set_ylabel('Power')
+    ax4.set_xlim(-20, 20)
+
+    # Plot g^(2)(tau)
+    ax5 = fig.add_subplot(3, 2, 5)
+    ax5.plot(tau, g2, 'k-')
+    ax5.set_title('Second-Order Coherence $g^{(2)}(\\tau)$')
+    ax5.set_xlabel('$\\tau$ (Delay)')
+    ax5.set_ylabel('Value')
+    ax5.set_xlim(-p['z_max']/2, p['z_max']/2)
+    ax5.axhline(1, ls='--', color='gray', label='Coherent (g$^{(2)}$=1)')
+    ax5.legend()
+    
+    plt.tight_layout(rect=[0, 0, 1, 0.96])
+    plt.show()
+
+def run_parameter_sweep(base_params, sweep_ranges):
+    """
+    Runs the simulation over a range of parameters and visualizes the results.
+    """
+    k_range = sweep_ranges['k_j_imag_range']
+    delta_range = sweep_ranges['Delta_s_range']
+    
+    results_grid = np.zeros((len(delta_range), len(k_range)))
+
+    print("Starting parameter sweep...")
+    # --- Loop over all parameter combinations ---
+    for i, delta_s in enumerate(delta_range):
+        for j, k_imag in enumerate(k_range):
+            # Create a copy of the params and update with current sweep values
+            current_params = base_params.copy()
+            current_params['Delta_s'] = delta_s
+            current_params['k_j_imag'] = k_imag
+            
+            # Run the calculation and store the result
+            results_grid[i, j] = calculate_g2_peak(current_params)
+        
+        # Progress indicator
+        progress = (i + 1) / len(delta_range) * 100
+        print(f"Progress: {progress:.1f}%")
+
+    # --- Plotting the Heatmap ---
+    fig, ax = plt.subplots(figsize=(10, 8))
+    im = ax.imshow(
+        results_grid,
+        extent=[k_range[0], k_range[-1], delta_range[0], delta_range[-1]],
+        aspect='auto',
+        origin='lower',
+        interpolation='nearest',
+        cmap='inferno' # 'hot', 'viridis', 'plasma' are also good
+    )
+
+    fig.colorbar(im, ax=ax, label='Peak $g^{(2)}(0)$ Value')
+    ax.set_title('Parameter Sweep: Photon Bunching $g^{(2)}(0)$')
+    ax.set_xlabel('Coupling Strength ($k_{j, imag}$)')
+    ax.set_ylabel('Detuning ($\\Delta_s$)')
+    
+    plt.show()
+    return results_grid
+def calculate_g2_peak(p):
+    """
+    Core calculation function for a single set of parameters.
+    This function calculates and returns the peak value of g^(2)(0).
+    It does not generate any plots.
+    """
+    # --- 1. Calculate Deterministic Part ---
+    k_j = p['k_j_real'] + 1j * p['k_j_imag']
+    chi_s = -p['alpha_s']/2 + 1j * p['Delta_s']
+    chi_m = -p['alpha_m']/2
+    A = (chi_s + chi_m) / 2
+    D = np.lib.scimath.sqrt((chi_s - chi_m)**2 + 4 * k_j * np.conj(k_j))
+    lambda_p = A + D/2
+    lambda_m = A - D/2
+    epsilon = 1e-15
+    P_denom = chi_s - A + D/2
+    Q_denom = chi_s - A - D/2
+    P = k_j / (P_denom + epsilon)
+    Q = k_j / (Q_denom + epsilon)
+    L = 1 / (Q - P + epsilon)
+
+    z = np.linspace(0, p['z_max'], p['num_points'])
+    term1 = (-P * np.exp(lambda_p * z) + Q * np.exp(lambda_m * z)) * p['a0']
+    term2 = (P * Q * (-np.exp(lambda_p * z) + np.exp(lambda_m * z))) * p['b0_dagger']
+    a_z_deterministic = L * (term1 + term2)
+
+    # --- 2. Ensemble Averaging for Statistics ---
+    ensemble_g2_numerator_at_zero = 0
+    ensemble_mean_I_sq = 0
+
+    for _ in range(p['num_ensemble']):
+        real_noise = np.random.normal(0, p['noise_strength'], p['num_points'])
+        imag_noise = np.random.normal(0, p['noise_strength'], p['num_points'])
+        stochastic_noise = real_noise + 1j * imag_noise
+        a_z_total = a_z_deterministic + stochastic_noise
+        I_z = np.abs(a_z_total)**2
+        
+        # We only need the value at tau=0 for the peak
+        ensemble_g2_numerator_at_zero += np.mean(I_z**2)
+        ensemble_mean_I_sq += np.mean(I_z)**2
+
+    mean_g2_numerator = ensemble_g2_numerator_at_zero / p['num_ensemble']
+    mean_denominator_g2 = ensemble_mean_I_sq / p['num_ensemble']
+
+    if mean_denominator_g2 < epsilon:
+        return 1.0 # Avoid division by zero, return coherent value
+
+    g2_peak = mean_g2_numerator / mean_denominator_g2
+    return g2_peak
+
+
+
+
+
+
 # --- Run the main function ---
 if __name__ == "__main__":
     #create_and_plot_thermal_state()
 	#calculate_g2_for_thermal_mode()
 	#calculate_g2_for_multi_mode()
     #calculate_g2_and_spectrum()
-    calculate_g2_and_spectrum_differentHilbertSpaces()
+    #calculate_g2_and_spectrum_differentHilbertSpaces()
+    #simulation_multiple_mode()
+    # --- Main Parameters You Can Change ---
+    # All parameters are collected here for easy modification.
+    # --- Main Parameters You Can Change ---
+    # These parameters are adjusted to isolate the thermal statistics.
+    '''
+    params = {
+        'alpha_s': 0.1, 'alpha_m': 0.5,
+        'k_j_real': 0,
+        # Set a0 to be very small to make the deterministic signal negligible.
+        'a0': 1e-5 + 0.0j, 
+        'b0_dagger': 0.0 + 0.0j,
+        'z_max': 50.0, 'num_points': 1024,
+        # Set noise strength to a clear value.
+        'noise_strength': 1.0,
+        'num_ensemble': 50  # Reduced for faster sweeps
+    }
+    '''
+    params = {
+    # Physical parameters
+    'alpha_s': 0.1,    # Loss/gain for 's' mode
+    'alpha_m': 0.5,    # Loss/gain for 'm' mode
+    'Delta_s': 2.0,    # Detuning for 's' mode
+    'k_j_real': 0,     # Real part of the coupling k_j
+    'k_j_imag': 1.5,     # Imaginary part of the coupling k_j
+
+    # Initial conditions
+    'a0': 1.0 + 0.0j,  # Initial amplitude of a_s,j
+    'b0_dagger': 0.0 + 0.0j, # Initial amplitude of b_j_dagger
+
+    # Simulation parameters
+    'z_max': 50.0,     # Maximum z to simulate
+    'num_points': 4096 # Number of points (power of 2 is good for FFT)
+    }
+
+    # --- Parameters to Sweep ---
+    # Define the ranges for the parameters you want to explore.
+    sweep_params = {
+        'k_j_imag_range': np.linspace(0.1, 2.5, 20),
+        'Delta_s_range': np.linspace(-3.0, 3.0, 20)
+    }
+
+    run_simulation(params)
+    #run_parameter_sweep(params, sweep_params)

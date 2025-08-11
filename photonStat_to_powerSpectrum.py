@@ -36,20 +36,56 @@ def analyze_session3():
     # =========================================================================
     # 1. Load and Process the Experimental Data to get the Power Spectrum
     # =========================================================================
-    
+
     # --- File Paths and Data Selection ---
-    folder_path = 'Measurements/Session_3_Photon_Statistics_And_Heterodyne/3_1GHz_187microWatt_slightly_lasing/data_photon_stat/'
-    choice = input("Enter '1' for tx_1_ns_... data or '2' for tx_.1_ns_... data: ")
-    
-    if choice == '1':
-        file_name = 'tx_1_ns_over_weekend_1.csv'
-        time_conversion_factor = 1e-9
-    elif choice == '2':
-        file_name = 'tx_.1_ns_over_weekend_1.csv'
-        time_conversion_factor = 1e-10
+
+    # First, ask the user to choose the experimental setup
+    setup_choice = input("Select the setup: Enter '1' for 1GHz or '2' for Cavity data: ")
+    print("-" * 30) # A separator for cleaner output
+
+    # --- Setup 1: 1GHz Data ---
+    if setup_choice == '1':
+        folder_path = 'Measurements/Session_3_Photon_Statistics_And_Heterodyne/3_1GHz_187microWatt_slightly_lasing/data_photon_stat/'
+        
+        # Now, choose the specific file within the 1GHz setup
+        file_choice = input("1GHz Setup | Enter '1' for 1 ns data or '2' for 0.1 ns data: ")
+        
+        if file_choice == '1':
+            file_name = 'tx_1_ns_over_weekend_1.csv'
+            time_conversion_factor = 1e-9
+        elif file_choice == '2':
+            file_name = 'tx_.1_ns_over_weekend_1.csv'
+            time_conversion_factor = 1e-10
+        else:
+            print("Invalid file choice.")
+            # Consider adding 'return' or 'exit()' here if running in a function/script
+            file_name = None # Prevents error if the script continues
+
+    # --- Setup 2: Cavity Data ---
+    elif setup_choice == '2':
+        #folder_path = 'Measurements/Session_3_Photon_Statistics_And_Heterodyne/2_Cavity_Filter_focusing_on_one_mode/data_photon_stat/'
+        folder_path = 'Measurements/Session_3_Photon_Statistics_And_Heterodyne/1_Cavity_and_1GHz_Filters/data_photon_stat'
+        #file_name = 'data016.csv'
+        file_name = 'photonStat_0.1ns_binwidth.csv'
+        
+        time_conversion_factor = 1e-9 
+        
+        print(f"Cavity Setup | Selected file: {file_name}")
+
+    # --- Invalid Setup Choice ---
     else:
-        print("Invalid choice.")
-        return
+        print("Invalid setup choice.")
+        # Consider adding 'return' or 'exit()' here
+        file_name = None # Prevents error if the script continues
+
+    # --- Final Check ---
+    # This ensures the rest of your script doesn't run with invalid paths
+    if file_name:
+        print("\n--- Configuration Loaded ---")
+        print(f"Folder: {folder_path}")
+        print(f"File: {file_name}")
+        print(f"Time Factor: {time_conversion_factor}")
+        print("--------------------------")
 
     full_path = os.path.join(folder_path, file_name)
     total_power_watts = 187e-6

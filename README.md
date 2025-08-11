@@ -1,6 +1,6 @@
 # MSc Project: Experimental Investigation of Brillouin Scattering Statistics
 
-This repository contains the data, analysis scripts, and figures for an MSc project at Imperial College London. The experimental work was conducted at the Quantum Measurements Lab under the supervision of Professor Michael Vanner.
+This repository contains the data, analysis scripts, and figures for an MSc project at Imperial College London. The experimental work was conducted at the Quantum Measurements Lab under the supervision of Professor Michael Vanner and Dr. Anthony Leung.
 
 The project's primary goal is to experimentally characterize the statistical properties of light generated via Brillouin scattering. We investigate the transition from a thermal light field in the spontaneous regime to a coherent light field in the stimulated (lasing) regime. This is primarily achieved by measuring the second-order temporal correlation function, $g^{(2)}(\tau)$.
 

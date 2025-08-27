@@ -6,6 +6,9 @@ from scipy.optimize import curve_fit
 from scipy.signal import argrelextrema
 import matplotlib.pyplot as plt
 import argparse
+from scipy.integrate import simpson
+
+
 
 
 
@@ -183,6 +186,7 @@ def analyze_session1():
 			peak_amps = [np.nan, np.nan, np.nan]
 			baseline = np.nan
 			area1 = area2 = area3 = np.nan
+			print(e)
 
 		# Save all results in a row (add areas)
 		row = peak_amps + peak_freqs + [baseline, just_name[:-4], area1, area2, area3] + peak_widths

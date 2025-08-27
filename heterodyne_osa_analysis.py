@@ -41,15 +41,15 @@ def dbm_to_watts(dbm):
     return 10 ** ((dbm - 30) / 10)       
         
 def analyze_session1():
-	folder_path = 'OSA_Measurements/Session_1_No_Polariser/'
-	image_folder = 'OSA_Measurements_Analysis/Session_1/imagesLorentzians/'
+	folder_path = 'Measurements/Session_1_No_Polariser/'
+	image_folder = 'Measurements_Analysis/Session_1/imagesLorentzians/'
 	os.makedirs(folder_path, exist_ok=True)
 	os.makedirs(image_folder, exist_ok=True)
 	results = []
 	for csv_file in glob.glob(os.path.join(folder_path, '*.csv')):
 		# Get just the filename
 		base_name = os.path.basename(csv_file)
-
+		print(base_name)
 		# Extract substring after "OSA "
 		if "OSA " in base_name:
 		    just_name = base_name.split("OSA ", 1)[1]
@@ -101,6 +101,7 @@ def analyze_session1():
 			popt, _ = curve_fit(triple_lorentzian, freqs_fit, powers_fit_dbm, p0=p0, maxfev=20000)
 			peak_freqs = [popt[0], popt[3], popt[6]]
 			peak_amps = [popt[2], popt[5], popt[8]]
+			peak_widths = [popt[1], popt[4], popt[7]]
 			baseline = popt[9]
 
 			# ---- Stationary points and integration section ----
@@ -184,7 +185,7 @@ def analyze_session1():
 			area1 = area2 = area3 = np.nan
 
 		# Save all results in a row (add areas)
-		row = peak_amps + peak_freqs + [baseline, just_name[:-4], area1, area2, area3]
+		row = peak_amps + peak_freqs + [baseline, just_name[:-4], area1, area2, area3] + peak_widths
 		results.append(row)
 
 	# Prepare DataFrame and save to CSV
@@ -192,11 +193,12 @@ def analyze_session1():
 	    'peak1_amp', 'peak2_amp', 'peak3_amp',
 	    'peak1_freq', 'peak2_freq', 'peak3_freq',
 	    'baseline', 'powerOf10PercentBeamSplitter(MicroWatt)',
-	    'peak1_area_W_Hz', 'peak2_area_W_Hz', 'peak3_area_W_Hz'
+	    'peak1_area_W_Hz', 'peak2_area_W_Hz', 'peak3_area_W_Hz',
+		'peak1_width', 'peak2_width', 'peak3_width'
 	]
 	df = pd.DataFrame(results, columns=columns)
 
-	output_folder = 'OSA_Measurements_Analysis/Session_1/'
+	output_folder = 'Measurements_Analysis/Session_1/'
 	os.makedirs(output_folder, exist_ok=True)
 	output_path = os.path.join(output_folder, 'all_peaks_summary.csv')
 	df.to_csv(output_path, index=False)
@@ -206,8 +208,8 @@ def analyze_session1():
 
 
 def analyze_session2():
-	folder_path = 'OSA_Measurements/Session_2_Heterodyne_Measurement_MHzRange/'
-	image_folder = 'OSA_Measurements_Analysis/Session_2/imagesLorentzians/'
+	folder_path = 'Measurements/Session_2_Heterodyne_Measurement_MHzRange/'
+	image_folder = 'Measurements_Analysis/Session_2/imagesLorentzians/'
 	os.makedirs(folder_path, exist_ok=True)
 	os.makedirs(image_folder, exist_ok=True)
 	results = []
@@ -578,7 +580,7 @@ def analyze_session2():
 	)
 	df = pd.DataFrame(results, columns=columns)
 
-	output_folder = 'OSA_Measurements_Analysis/Session_2/'
+	output_folder = 'Measurements_Analysis/Session_2/'
 	os.makedirs(output_folder, exist_ok=True)
 	output_path = os.path.join(output_folder, 'all_peaks_summary.csv')
 	df.to_csv(output_path, index=False)

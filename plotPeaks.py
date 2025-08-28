@@ -60,9 +60,9 @@ def analyseSession_1():
 
 	# Plot 4: x = power, y = area (axes swapped)
 	plt.figure(figsize=(10,6))
-	plt.scatter(power, df['peak1_area_W_Hz'], label='Stokes Area', s=5)
-	plt.scatter(power, df['peak2_area_W_Hz'], label='Rayleigh Area', s=5)
-	plt.scatter(power, df['peak3_area_W_Hz'], label='Anti-Stokes Area', s=5)
+	plt.scatter(power, dbm_to_watts(watts_to_dbm(df['peak1_area_W_Hz']) + df['baseline']), label='Stokes Area', s=5)
+	plt.scatter(power, dbm_to_watts(watts_to_dbm(df['peak2_area_W_Hz']) + df['baseline']), label='Rayleigh Area', s=5)
+	plt.scatter(power, dbm_to_watts(watts_to_dbm(df['peak3_area_W_Hz']) + df['baseline']), label='Anti-Stokes Area', s=5)
 	plt.xlabel('Power of 10% Beam Splitter (MicroWatt)')
 	plt.ylabel('Peak Area (Watt × Hz)')
 	plt.title('Peak Areas vs Beam Splitter Power')
@@ -83,13 +83,6 @@ def analyseSession_1():
 	plt.tight_layout()
 	plt.savefig(os.path.join(images_folder, 'areadBm_vs_power.png'), dpi=300)
 	# plt.show()  # Commented for fast batch processing
-
-
-
-
-
-
-
 
 	# Plot 6: x = power, y = area (axes swapped)
 	plt.figure(figsize=(10,6))

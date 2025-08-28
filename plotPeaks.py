@@ -12,12 +12,12 @@ def dbm_to_watts(dbm):
 
 def analyseSession_1():
 	# Load the CSV
-	df = pd.read_csv('OSA_Measurements_Analysis/Session_1/all_peaks_summary.csv')
+	df = pd.read_csv('Measurements_Analysis/Session_1/all_peaks_summary.csv')
 
 	power = df['powerOf10PercentBeamSplitter(MicroWatt)']
 
 	# Make 'images' folder next to the CSV if it doesn't exist
-	images_folder = "OSA_Measurements_Analysis/Session_1/images"
+	images_folder = "Measurements_Analysis/Session_1/images"
 
 	# Plot 1: x = amplitude, y = power
 	plt.figure(figsize=(10,6))
@@ -84,11 +84,18 @@ def analyseSession_1():
 	plt.savefig(os.path.join(images_folder, 'areadBm_vs_power.png'), dpi=300)
 	# plt.show()  # Commented for fast batch processing
 
+
+
+
+
+
+
+
 	# Plot 6: x = power, y = area (axes swapped)
 	plt.figure(figsize=(10,6))
-	plt.scatter(power, watts_to_dbm(df['peak1_area_W_Hz']), label='Stokes Area', s=5)
-	plt.scatter(power, watts_to_dbm(df['peak2_area_W_Hz']), label='Rayleigh Area', s=5)
-	plt.scatter(power, watts_to_dbm(df['peak3_area_W_Hz']), label='Anti-Stokes Area', s=5)
+	plt.scatter(power, watts_to_dbm(df['peak1_area_W_Hz']) + df['baseline'], label='Stokes Area', s=5)
+	plt.scatter(power, watts_to_dbm(df['peak2_area_W_Hz']) + df['baseline'], label='Rayleigh Area', s=5)
+	plt.scatter(power, watts_to_dbm(df['peak3_area_W_Hz']) + df['baseline'], label='Anti-Stokes Area', s=5)
 	plt.xlabel('Power of 10% Beam Splitter (MicroWatt)')
 	plt.ylabel('Peak Area (dBm)')
 	plt.title('Peak Areas vs Beam Splitter Power')

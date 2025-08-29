@@ -2,6 +2,9 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import os
 
+#THIS FILE IS JUST USED TO CREATE THE LINEWIDTH VS POWER SCATTER PLOT FOR SESSION 1
+
+
 # --- Configuration ---
 # Path to the input CSV file for Session 1.
 input_filepath = 'Measurements_Analysis/Session_1/all_peaks_summary_sorted.csv'

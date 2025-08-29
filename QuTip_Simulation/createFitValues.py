@@ -106,7 +106,7 @@ if __name__ == '__main__':
         
         plt.xlabel('Frequency (Hz)')
         plt.ylabel('Power (dBm)')
-        plt.title('Heterodyne Data vs. Triple Lorentzian Fit')
+        plt.title('Heterodyne Data with Triple Lorentzian Fit (1GHz Filter)')
         plt.legend()
         plt.grid(True)
         plt.ylim(bottom=np.min(exp_power_dbm) - 5, top=np.max(exp_power_dbm) + 5)

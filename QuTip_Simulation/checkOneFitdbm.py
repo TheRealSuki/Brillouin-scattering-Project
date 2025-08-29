@@ -98,7 +98,7 @@ if __name__ == '__main__':
     # =========================================================================
     # --- 1. SET YOUR PARAMETERS HERE ---
     # =========================================================================
-    # Enter the parameters you want to test. You can copy the 'p_opt'
+    # Enter the parameters you want to test. You can copy the 'p_opt' (from fitWatchdbm.py)
     # values from a successful fit here to validate the result.
 
     test_params = {

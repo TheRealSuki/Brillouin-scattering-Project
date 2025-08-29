@@ -299,7 +299,9 @@ def plotg20comparison():
     filter_setups = {
         '1GHz Filter': os.path.join(base_path, '3_1GHz_187microWatt_slightly_lasing/data_photon_stat'),
         'Cavity Filter': os.path.join(base_path, '2_Cavity_Filter_focusing_on_one_mode/data_photon_stat'),
-        'Cavity + 1GHz Filters': os.path.join(base_path, '1_Cavity_and_1GHz_Filters/data_photon_stat')
+        'Cavity + 1GHz Filters': os.path.join(base_path, '1_Cavity_and_1GHz_Filters/data_photon_stat'),
+        '1GHz + 10GHz + 4GHz Filters' : '/home/apolloin/Desktop/Brillouin_Scattering/Brillouin-scattering-Project/Measurements/Session_4_Photon_Statistics_More_Filters_No_Heterodyne/1GHz10GHzAOS4GHz',
+        '1GHz + 4GHz + 10GHz Filters' : '/home/apolloin/Desktop/Brillouin_Scattering/Brillouin-scattering-Project/Measurements/Session_4_Photon_Statistics_More_Filters_No_Heterodyne/1GH4GHzAOS10GHz'
     }
     
     # Dictionary to store the best result for each filter
@@ -389,6 +391,9 @@ def plotg20comparison():
     names = list(best_results.keys())
     values = [result['g20'] for result in best_results.values()]
     
+    #Adding manual texts
+    manual_texts = ['187microWatt', '70microWatt', 'Transition', 'Transition', 'Transition', 'Any regime']  # Add more texts as needed
+
     # Add more colors for the new bars
     colors = ['skyblue', 'lightgreen', 'salmon', 'gold', 'orchid']
 
@@ -396,9 +401,10 @@ def plotg20comparison():
     bars = plt.bar(names, values, color=colors[:len(names)])
     
     # Add the g^(2)(0) value on top of each bar
-    for bar in bars:
+    for i, bar in enumerate(bars):
         yval = bar.get_height()
-        plt.text(bar.get_x() + bar.get_width()/2.0, yval, f'{yval:.3f}', va='bottom', ha='center')
+        plt.text(bar.get_x() + bar.get_width() / 2.0, yval / 2, manual_texts[i], va='center', ha='center', color='white', fontsize=12, fontweight='bold')
+        plt.text(bar.get_x() + bar.get_width() / 2.0, yval, f'{yval:.3f}', va='bottom', ha='center')
 
     plt.title('Maximum Achieved $g^{(2)}(0)$ by Filter Configuration', fontsize=16)
     plt.ylabel('$g^{(2)}(0)$ Value', fontsize=12)
@@ -409,12 +415,111 @@ def plotg20comparison():
     plt.tight_layout()
     plt.show()
 
+def create_g2_plots():
+    """
+    Finds g2(tau) measurement .csv files in specified directories,
+    normalizes the data, creates an individual plot for each, and saves it to a
+    dedicated analysis folder.
+    """
+    # --- Configuration ---
+    # NOTE: You might need to adjust these paths to match your computer's file structure.
+    base_path_session3 = 'Measurements/Session_3_Photon_Statistics_And_Heterodyne/'
+    base_path_session4 = 'Measurements/Session_4_Photon_Statistics_More_Filters_No_Heterodyne/'
+
+    # A dictionary to hold the descriptive names and paths for each measurement setup.
+    filter_setups = {
+        '1GHz Filter': os.path.join(base_path_session3, '3_1GHz_187microWatt_slightly_lasing/data_photon_stat'),
+        'Cavity Filter': os.path.join(base_path_session3, '2_Cavity_Filter_focusing_on_one_mode/data_photon_stat'),
+        'Cavity + 1GHz Filters': os.path.join(base_path_session3, '1_Cavity_and_1GHz_Filters/data_photon_stat'),
+        '1GHz + 10GHz + 4GHz Filters': os.path.join(base_path_session4, '1GHz10GHzAOS4GHz'),
+        '1GHz + 4GHz + 10GHz Filters': os.path.join(base_path_session4, '1GH4GHzAOS10GHz')
+    }
+
+    # --- Output Directory ---
+    # Define the directory where all the plots will be saved.
+    output_directory = 'Measurements_Analysis/Session_3'
+    # Create the directory if it doesn't exist. exist_ok=True prevents an error if it's already there.
+    os.makedirs(output_directory, exist_ok=True)
+    print(f"Plots will be saved to: {os.path.abspath(output_directory)}")
+
+    # --- Data Processing and Plotting Loop ---
+    # Iterate over each setup defined in the dictionary.
+    for name, path in filter_setups.items():
+        try:
+            # Find all files in the directory that end with .csv.
+            csv_files = [f for f in os.listdir(path) if f.endswith('.csv')]
+            
+            if not csv_files:
+                print(f"Warning: No CSV files found in directory: {path}")
+                continue
+            
+            # This loop will process every CSV file found, not just the first one.
+            for csv_file in csv_files:
+                file_path = os.path.join(path, csv_file)
+                print(f"Processing: {file_path}")
+
+                # Read the CSV file using pandas.
+                # skiprows=1 tells pandas to skip the first line (the header).
+                data = pd.read_csv(file_path, skiprows=1, names=['tau', 'g2'])
+
+                # --- Normalization ---
+                tail_start_index = int(len(data['g2']) * 0.75)
+                normalization_factor = data['g2'].iloc[tail_start_index:].mean()
+                
+                if normalization_factor == 0:
+                    print(f"Warning: Normalization factor is zero for {name}. Skipping this file.")
+                    continue
+
+                g2_normalized = data['g2'] / normalization_factor
+
+                # --- Plotting Setup (New plot for each file) ---
+                plt.style.use('seaborn-v0_8-whitegrid')
+                fig, ax = plt.subplots(figsize=(12, 7))
+
+                # --- Plot the Data ---
+                ax.plot(data['tau'], g2_normalized, label=name, linewidth=2, color='royalblue')
+
+                # --- Plot Customization ---
+                title_name = name.replace(' + ', ' & ') # Make title cleaner
+                ax.set_title(f'Second-Order Autocorrelation: {title_name}', fontsize=18, fontweight='bold')
+                ax.set_xlabel('Time Delay $\\tau$ (ns)', fontsize=14)
+                ax.set_ylabel('Normalized Correlation $g^{(2)}(\\tau)$', fontsize=14)
+                ax.axhline(y=1, color='gray', linestyle='--', linewidth=1, label='Uncorrelated (g$^{(2)}$=1)')
+                ax.set_ylim(0.5, 2.1)
+                ax.legend(fontsize=12)
+                ax.tick_params(axis='both', which='major', labelsize=12)
+                plt.tight_layout()
+
+                # --- File Saving ---
+                # Create a safe and descriptive filename.
+                # 1. Sanitize the setup name.
+                sanitized_name = name.replace(' ', '_').replace('+', '').replace('/', '_')
+                # 2. Get the original filename without the .csv extension.
+                csv_basename = os.path.splitext(csv_file)[0]
+                # 3. Combine them for the final filename.
+                output_filename = f"{sanitized_name}_{csv_basename}.png"
+                
+                # Construct the full path for saving the file.
+                output_path = os.path.join(output_directory, output_filename)
+                
+                # Save the figure with high resolution (dpi).
+                plt.savefig(output_path, dpi=300)
+                print(f"  -> Saved plot to: {output_path}")
+
+                # Close the figure to free up memory before the next loop iteration.
+                plt.close(fig)
+
+        except FileNotFoundError:
+            print(f"Error: The directory was not found: {path}")
+        except Exception as e:
+            print(f"An error occurred while processing '{name}': {e}")
+
 # --- Main execution block ---
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     # Choices list
     parser.add_argument('--session', type=str, default='session_1', 
-                        choices=['session_1', 'session_2', 'session_2_freq', 'plotg20comparison'],
+                        choices=['session_1', 'session_2', 'session_2_freq', 'plotg20comparison', 'create_g2_plots'],
                         help='Choose which session to analyze (default: session_1)')
     args = parser.parse_args()
 
@@ -434,11 +539,10 @@ if __name__ == "__main__":
         # Plot g2 comparison
         print("Running code for g2 comparison")
         plotg20comparison()
-
-
-
-
-
+    elif args.session == 'create_g2_plots':
+        # Create g2 plots
+        print("Running code to create g2 plots")
+        create_g2_plots()
 
 
 

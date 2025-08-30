@@ -19,7 +19,7 @@ def generate_single_mode(p):
     k_j = -1j * p['gtilde'] * p['A_p']
     alpha_m = p['alpha_p']
     chi_s = -p['alpha_s']/2 + 1j * p['Delta_s']
-    chi_m = -alpha_m/2
+    chi_m = -alpha_m/2 - 1j * p['Delta_m']
 
     A = (chi_s + chi_m) / 2
     D = scimath.sqrt((chi_s - chi_m)**2 + 4 * k_j * np.conj(k_j))
@@ -105,6 +105,7 @@ if __name__ == '__main__':
         'alpha_s1': 10.0000, 'alpha_s2': 3.3366, 'alpha_s3': 10.0000,
         'alpha_p1': 7.5395, 'alpha_p2': 4.6094, 'alpha_p3': 9.1923,
         'Delta_s1': 15.5236, 'Delta_s2': 8.2157, 'Delta_s3': 21.2983,
+        'Delta_m1': -1.0000, 'Delta_m2': -1.0000, 'Delta_m3': -1.0000,
         'gtilde1': 2.9253, 'gtilde2': 2.0039, 'gtilde3': 2.7371,
         'A_p_common': 2.0802,
         'a0_1_real': -2.6868, 'a0_1_imag': 2.4174,
@@ -117,7 +118,7 @@ if __name__ == '__main__':
     }
     
     # --- 2. LOAD THE TARGET LORENTZIAN CURVE ---
-    filepath = '/home/apolloin/Desktop/Brillouin_Scattering/Brillouin-scattering-Project/QuTip_Simulation/heterodyne_fit_curve.csv'
+    filepath = '/home/apolloin/Desktop/Brillouin_Scattering/Brillouin-scattering-Project/Models_for_g2_S(w)_connection/heterodyne_fit_curve.csv'
     try:
         target_freq_mhz, target_power_dbm = load_and_process_lorentzian_fit_data(filepath)
     except FileNotFoundError:
@@ -137,9 +138,9 @@ if __name__ == '__main__':
     b0_dagger2 = p['b0_dagger2_real'] + 1j * p['b0_dagger2_imag']
     b0_dagger3 = p['b0_dagger3_real'] + 1j * p['b0_dagger3_imag']
 
-    params1 = {'A_p': p['A_p_common'], 'z_max': 50.0, 'num_points': 8192, 'alpha_s': p['alpha_s1'], 'alpha_p': p['alpha_p1'], 'Delta_s': p['Delta_s1'], 'a0': a0_1, 'gtilde': p['gtilde1'], 'b0_dagger': b0_dagger1}
-    params2 = {'A_p': p['A_p_common'], 'z_max': 50.0, 'num_points': 8192, 'alpha_s': p['alpha_s2'], 'alpha_p': p['alpha_p2'], 'Delta_s': p['Delta_s2'], 'a0': a0_2, 'gtilde': p['gtilde2'], 'b0_dagger': b0_dagger2}
-    params3 = {'A_p': p['A_p_common'], 'z_max': 50.0, 'num_points': 8192, 'alpha_s': p['alpha_s3'], 'alpha_p': p['alpha_p3'], 'Delta_s': p['Delta_s3'], 'a0': a0_3, 'gtilde': p['gtilde3'], 'b0_dagger': b0_dagger3}
+    params1 = {'A_p': p['A_p_common'], 'z_max': 50.0, 'num_points': 8192, 'alpha_s': p['alpha_s1'], 'alpha_p': p['alpha_p1'], 'Delta_s': p['Delta_s1'], 'Delta_m': p['Delta_m1'], 'a0': a0_1, 'gtilde': p['gtilde1'], 'b0_dagger': b0_dagger1}
+    params2 = {'A_p': p['A_p_common'], 'z_max': 50.0, 'num_points': 8192, 'alpha_s': p['alpha_s2'], 'alpha_p': p['alpha_p2'], 'Delta_s': p['Delta_s2'], 'Delta_m': p['Delta_m2'], 'a0': a0_2, 'gtilde': p['gtilde2'], 'b0_dagger': b0_dagger2}
+    params3 = {'A_p': p['A_p_common'], 'z_max': 50.0, 'num_points': 8192, 'alpha_s': p['alpha_s3'], 'alpha_p': p['alpha_p3'], 'Delta_s': p['Delta_s3'], 'Delta_m': p['Delta_m3'], 'a0': a0_3, 'gtilde': p['gtilde3'], 'b0_dagger': b0_dagger3}
 
     z1, a1 = generate_single_mode(params1)
     z2, a2 = generate_single_mode(params2)

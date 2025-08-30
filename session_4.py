@@ -2,6 +2,10 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 
+
+#Assuming this file analyses the weird data from Session 4 photon counting. (1GHz4GHz10GHzAOS Filter ones.)
+
+
 def analyze_photon_data(filename):
     """
     Loads photon counting data, calculates the g2(τ) correlation function,

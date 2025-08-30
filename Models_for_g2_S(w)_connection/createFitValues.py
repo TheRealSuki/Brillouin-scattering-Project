@@ -1,3 +1,10 @@
+'''
+This script was used to generate the data for the model fit. As it is easier for the mode to fit lorentzian functions
+rather than dot data.
+'''
+
+
+
 import os
 import numpy as np
 import pandas as pd
@@ -7,6 +14,9 @@ import matplotlib.pyplot as plt
 
 # A small constant to prevent division by zero
 eps = 1e-20
+
+def dbm_to_watts(dbm):
+    return 10 ** ((dbm - 30) / 10)    
 
 # --- Lorentzian Fitting Functions ---
 def lorentzian(x, x0, gamma, A, y0):
@@ -112,6 +122,20 @@ if __name__ == '__main__':
         plt.ylim(bottom=np.min(exp_power_dbm) - 5, top=np.max(exp_power_dbm) + 5)
         plt.show()
 
+        plt.plot(dense_freq_hz, dbm_to_watts(fit_total), 'k-', label='Total Lorentzian Fit', linewidth=2)
+
+        plt.plot(dense_freq_hz, dbm_to_watts(lorentz1), '--', label=f'Peak 1 (f0={popt[0]/1e6:.2f} MHz)')
+        plt.plot(dense_freq_hz, dbm_to_watts(lorentz2), '--', label=f'Peak 2 (f0={popt[3]/1e6:.2f} MHz)')
+        plt.plot(dense_freq_hz, dbm_to_watts(lorentz3), '--', label=f'Peak 3 (f0={popt[6]/1e6:.2f} MHz)')
+
+        plt.xlabel('Frequency (Hz)')
+        plt.ylabel('Power (Watt)')
+        plt.title('Heterodyne Data with Triple Lorentzian Fit (1GHz Filter)')
+        plt.legend()
+        plt.grid(True)
+        plt.show()
+
+
         # --- 5. SAVE THE FITTED CURVE DATA ---
         # Create a DataFrame with the fitted curve data
         # Column 1: Fitted Power (dBm), Column 2: Frequency (Hz)
@@ -119,10 +143,49 @@ if __name__ == '__main__':
             'fit_power_dBm': fit_total,
             'frequency_Hz': dense_freq_hz
         })
-        
+        fit_parameters = pd.DataFrame({
+            'Parameter': ['x01', 'g1', 'A1', 'x02', 'g2', 'A2', 'x03', 'g3', 'A3', 'y0'],
+            'Value': popt
+        })
+        fit_lorentzian_1 = pd.DataFrame({
+            'fit_power_dBm': lorentz1,
+            'frequency_Hz': dense_freq_hz
+        })
+        fit_lorentzian_2 = pd.DataFrame({
+            'fit_power_dBm': lorentz2,
+            'frequency_Hz': dense_freq_hz
+        })
+        fit_lorentzian_3 = pd.DataFrame({
+            'fit_power_dBm': lorentz3,
+            'frequency_Hz': dense_freq_hz
+        })
+        fit_lorentzian_1_watt = pd.DataFrame({
+            'fit_power_watt': dbm_to_watts(lorentz1),
+            'frequency_Hz': dense_freq_hz
+        })
+        fit_lorentzian_2_watt = pd.DataFrame({
+            'fit_power_watt': dbm_to_watts(lorentz2),
+            'frequency_Hz': dense_freq_hz
+        })
+        fit_lorentzian_3_watt = pd.DataFrame({
+            'fit_power_watt': dbm_to_watts(lorentz3),
+            'frequency_Hz': dense_freq_hz
+        })
+
+        #Currently it save to the same folder, but the lorentzian csv-s were moved to the newmodel and oldmodel folders.
+        parameter_filename = 'fit_parameters.csv'
         output_filename = 'heterodyne_fit_curve.csv'
         fit_curve_df.to_csv(output_filename, index=False)
+        fit_parameters.to_csv(parameter_filename, index=False)
+        fit_lorentzian_1.to_csv('fit_lorentzian_1.csv', index=False)
+        fit_lorentzian_2.to_csv('fit_lorentzian_2.csv', index=False)
+        fit_lorentzian_3.to_csv('fit_lorentzian_3.csv', index=False)
+        fit_lorentzian_1_watt.to_csv('fit_lorentzian_1_watt.csv', index=False)
+        fit_lorentzian_2_watt.to_csv('fit_lorentzian_2_watt.csv', index=False)
+        fit_lorentzian_3_watt.to_csv('fit_lorentzian_3_watt.csv', index=False)
+        
         print(f"\nFitted curve data saved to '{output_filename}'")
+        print(f"Fitted parameters saved to '{parameter_filename}'")
 
 
     except RuntimeError as e:

@@ -1,3 +1,12 @@
+'''
+This script was just used to make sure the analytical solution is the same as the matrix exponential solution.
+It is.
+'''
+
+
+
+
+
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.linalg import expm

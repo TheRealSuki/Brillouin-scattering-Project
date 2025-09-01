@@ -80,7 +80,7 @@ if __name__ == '__main__':
     # --- 1. USER INPUT SECTION ---
     
     # Specify the path to the experimental data you want to plot against
-    target_data_filepath = '/home/apolloin/Desktop/Brillouin_Scattering/Brillouin-scattering-Project/QuTip_Simulation/fit_lorentzian_3.csv'
+    target_data_filepath = '/home/apolloin/Desktop/Brillouin_Scattering/Brillouin-scattering-Project/Models_for_g2_S(w)_connection/OldModel/fit_lorentzian_3.csv'
 
     # Define the parameters for each mode you want to simulate.
     # You can add more dictionaries to this list to simulate more modes.
@@ -88,7 +88,7 @@ if __name__ == '__main__':
         {
             # Mode 1 Parameters
             'alpha_s': 31.735, 
-            'alpha_p': 36.134, 
+            'alpha_p': 39.134, 
             'Delta_s': 22, # Does oscillations in the line, small oscillations (can make it Lorentzian I guess?)
             'Delta_m': 6.5,  # Does oscillations in the line, small oscillations (Lorentzain width I guess?)
             'gtilde': 4.7697,  # Coupling strength

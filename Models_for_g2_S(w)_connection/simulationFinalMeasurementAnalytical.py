@@ -7,6 +7,7 @@ import pandas as pd
 # A small constant to prevent division by zero in normalization
 eps = 1e-15
 
+
 def dbm_to_watts(dbm):
     return 10 ** ((dbm - 30) / 10)       
 
@@ -61,25 +62,78 @@ def compute_g1_vs_tau(a1, a2):
     return taus, g1
 
 
+def compute_g2_unnormalized(a, method="direct",  target_mean_I=1.0):
+    """
+    Compute unnormalized second-order correlation function G2(tau) 
+    from a complex field array, with rescaling for numerical stability.
+    
+    Parameters
+    ----------
+    a : np.ndarray
+        Complex field amplitudes (1D array).
+    method : str
+        Method to compute correlation: 'direct' (default), 'correlate', or 'fft'.
+    target_mean_I : float
+        Desired mean intensity for rescaling (default = 1.0).
+        
+    Returns
+    -------
+    G2 : np.ndarray
+        Unnormalized second-order correlation function.
+    taus : np.ndarray
+        Array of time delays (in sample units).
+    scale_factor : float
+        Factor applied to rescale input.
+    """
+    # --- Step 1: rescale field ---
+    I = np.abs(a)**2
+    orig_mean_I = np.mean(I)
+    if orig_mean_I == 0:
+        raise ValueError("Input field has zero mean intensity, cannot rescale.")
+    scale_factor = np.sqrt(target_mean_I / orig_mean_I)
+    a_scaled = a * scale_factor
 
-def compute_g2_vs_tau(a1, a2):
-    """
-    Computes the second-order temporal coherence g^(2)(tau).
-    """
-    N = len(a1)
-    I1 = np.abs(a1)**2
-    I2 = np.abs(a2)**2
+    I_scaled = np.abs(a_scaled)**2
+
+    # --- Step 2: compute G2 ---
+    if method == "direct":
+        N = len(I_scaled)
+        G2 = np.array([np.mean(I_scaled[:N-t] * I_scaled[t:]) for t in range(N)])
+        taus = np.arange(N)
+
+    elif method == "correlate":
+        G2 = np.correlate(I_scaled, I_scaled, mode="full")
+        mid = len(G2) // 2
+        G2 = G2[mid:] / len(I_scaled)
+        taus = np.arange(len(G2))
+
+    elif method == "fft":
+        F = np.fft.fft(I_scaled, n=2*len(I_scaled))
+        G2 = np.fft.ifft(F * np.conj(F)).real[:len(I_scaled)]
+        G2 /= len(I_scaled)
+        taus = np.arange(len(G2))
+
+    else:
+        raise ValueError("Method must be 'direct', 'correlate', or 'fft'.")
+
+    return taus, G2
+
+
+def compute_g2_vs_tau(a1, a):
+    N = len(a)
     taus = np.arange(-N + 1, N)
-    g2 = np.zeros(len(taus), dtype=float)
-    norm = np.mean(I1) * np.mean(I2) + eps
+    g2 = np.zeros(len(taus), dtype=np.complex128)
+
     for i, tau in enumerate(taus):
         if tau >= 0:
-            x1 = I1[:N - tau]
-            x2 = I2[tau:]
+            x1 = a[:N - tau]
+            x2 = a[tau:]
         else:
-            x1 = I1[-tau:]
-            x2 = I2[:N + tau]
-        g2[i] = np.mean(x1 * x2) / norm
+            x1 = a[-tau:]
+            x2 = a[:N + tau]
+
+        g2[i] = np.mean(np.conj(x2) * np.conj(x1) * x1 * x2)
+
     return taus, g2
 
 def compute_power_spectrum(x, z, zero_pad_factor=8, window=True):
@@ -134,19 +188,21 @@ params2 = {
     'scaling_factor': 6.8426e-11,
     'vertical_shift': 1.1810e-09
 }
+
+
 # Mode 3
 params3 = {
-    'alpha_s': 3.1816e+01, 
-    'alpha_p': 3.6518e+01, 
-    'Delta_s': 2.2609e+01, 
-    'Delta_m': 6.7813e+00,
-    'gtilde': 4.7610e+00,
-    'A_p': 4.6790e+00, 
+    'alpha_s': 3.1962e+01, 
+    'alpha_p': 3.6764e+01, 
+    'Delta_s': 2.2578e+01, 
+    'Delta_m': 6.7804e+00,
+    'gtilde': 4.7743e+00,
+    'A_p': 4.8790e+00, 
     'a0': 0 + 0j,
-    'b0_dagger': -1.9798e-02 -4.6948e-02j,
+    'b0_dagger': 5.1164e-02 -2.6692e-04j,
     'z_max': 50.0, 
     'num_points': 8192,
-    'scaling_factor': 6.8426e-11,
+    'scaling_factor': 6.8425e-11,
     'vertical_shift': 1.1777e-09
 }
 
@@ -172,6 +228,12 @@ g1_total = g1_11 + g1_22 + g1_33
 _, g2_11 = compute_g2_vs_tau(a1, a1); _, g2_22 = compute_g2_vs_tau(a2, a2)
 _, g2_33 = compute_g2_vs_tau(a3, a3); _, g2_total = compute_g2_vs_tau(a_total, a_total)
 g2_total_alt = g2_11 + g2_22 + g2_33
+
+#Alternative g2 calculation using unnormalized method
+taus_2, g2_11_unnorm = compute_g2_unnormalized(a1)
+taus_2, g2_22_unnorm = compute_g2_unnormalized(a2)
+taus_2, g2_33_unnorm = compute_g2_unnormalized(a3)
+taus_2, g2_total_unnorm = compute_g2_unnormalized(a_total)
 
 # --- New g2 calculation from normalized g1 ---
 # Take the absolute value of g1_total
@@ -203,6 +265,9 @@ S_total_W = S1_arb * params1['scaling_factor'] + S2_arb * params2['scaling_facto
 delay_ns = (taus * dz) * z_to_ns
 freq_mhz = (omega / (2 * np.pi)) * (1000 / z_to_ns)
 
+delay_ns_2 = (taus_2 * dz) * z_to_ns
+freq_mhz_2 = (omega / (2 * np.pi)) * (1000 / z_to_ns)
+
 # --- PLOTTING ---
 plt.style.use('seaborn-v0_8-darkgrid')
 
@@ -229,6 +294,21 @@ axs2[1, 1].plot(delay_ns, g2_total); axs2[1, 1].set_title('Auto: g$^{(2)}$(a_tot
 for ax in axs2.flat:
     ax.set(xlabel='Delay τ (ns)', ylabel='g$^{(2)}$(τ)|'); ax.grid(True)
 axs2[0,0].set_xlim(-100, 100)
+
+
+# g2 plot
+fig3, axs3 = plt.subplots(2, 2, figsize=(12, 10), sharex=True, sharey=True)
+fig3.suptitle('Second-Order Coherence g$^{(2)}$(τ)', fontsize=16)
+axs3[0, 0].plot(delay_ns_2, g2_11_unnorm); axs3[0, 0].set_title('Auto: g$^{(2)}$(a1, a1)')
+axs3[0, 1].plot(delay_ns_2, g2_22_unnorm); axs3[0, 1].set_title('Auto: g$^{(2)}$(a2, a2)')
+axs3[1, 0].plot(delay_ns_2, g2_33_unnorm); axs3[1, 0].set_title('Auto: g$^{(2)}$(a3, a3)')
+axs3[1, 1].plot(delay_ns_2, g2_total_unnorm); axs3[1, 1].set_title('Auto: g$^{(2)}$(a_total, a_total)')
+for ax in axs3.flat:
+    ax.set(xlabel='Delay τ (ns)', ylabel='g$^{(2)}$(τ)|'); ax.grid(True)
+axs3[0,0].set_xlim(-100, 100)
+
+
+
 #Siegert Relation: 1 + |g$^{(1)}_{norm}$|$^2
 # New Siegert g2 plot
 plt.figure(figsize=(12, 6))
@@ -298,11 +378,12 @@ power_watt_plot = dbm_to_watts(power_dbm_plot)
 
 # Power spectrum plot
 plt.figure(figsize=(12, 6))
+plt.plot(freq_mhz_plot, power_watt_plot, 'k.', label='Experimental Data', linewidth=1, color='green')
+
 plt.plot(freq_mhz, S_total_W, label='Total Field', linewidth=2.5, color='blue')
 plt.plot(freq_mhz, S1_W, '--', label="Mode 1")
 plt.plot(freq_mhz, S2_W, '--', label="Mode 2")
 plt.plot(freq_mhz, S3_W, ':', label="Mode 3")
-plt.plot(freq_mhz_plot, power_watt_plot, 'k.', label='Experimental Data', markersize=4)
 plt.xlim(0, 800)
 plt.ylim(bottom=0)
 plt.xlabel('Frequency (MHz)'); plt.ylabel('Power (W)')
@@ -310,4 +391,3 @@ plt.title('Calibrated Power Spectra'); plt.legend(); plt.grid(True)
 
 
 plt.tight_layout(rect=[0, 0.03, 1, 0.95]); plt.show()
-

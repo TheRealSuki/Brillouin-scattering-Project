@@ -135,6 +135,107 @@ def compute_g2_vs_tau(a1, a):
         g2[i] = np.mean(np.conj(x2) * np.conj(x1) * x1 * x2)
 
     return taus, g2
+def compute_g2_with_cross_terms(a1, a2, a3):
+    """
+    Computes the second-order temporal coherence g^(2)(tau) for the combined field a1 + a2.
+    
+    This version correctly includes interference effects (cross terms) by first
+    calculating the total intensity of the superposed fields.
+    """
+    # 1. Create the total field by summing the individual fields.
+    # This is the crucial step to include interference.
+    a_total = a1 + a2 + a3
+
+    # 2. Calculate the total intensity from the combined field.
+    I_total = np.abs(a_total)**2
+    
+    N = len(I_total)
+    taus = np.arange(-N + 1, N)
+    g2 = np.zeros(len(taus), dtype=float)
+    
+    # 3. Compute the intensity AUTOCORRELATION of the total intensity.
+    # The logic is the same as your original function, but applied to I_total.
+    for i, tau in enumerate(taus):
+        if tau >= 0:
+            # Slices of I_total for positive delay tau
+            x1 = I_total[:N - tau]
+            x2 = I_total[tau:]
+        else:
+            # Slices of I_total for negative delay tau
+            x1 = I_total[-tau:]
+            x2 = I_total[:N + tau]
+            
+        # Per-slice normalization, which is robust for non-stationary signals.
+        norm = np.mean(x1) * np.mean(x2) + eps
+        
+        # Calculate the normalized correlation for this tau
+        g2[i] = np.mean(x1 * x2) / norm
+        
+    return taus, g2
+
+
+def compute_g2_vs_tau_3modes(a1, a2, a3):
+    N = len(a1)
+    taus = np.arange(-N + 1, N)
+    g2 = np.zeros(len(taus), dtype=np.complex128)
+
+    for i, tau in enumerate(taus):
+        if tau >= 0:
+            x1_1, x2_1 = a1[:N - tau], a1[tau:]
+            x1_2, x2_2 = a2[:N - tau], a2[tau:]
+            x1_3, x2_3 = a3[:N - tau], a3[tau:]
+        else:
+            x1_1, x2_1 = a1[-tau:], a1[:N + tau]
+            x1_2, x2_2 = a2[-tau:], a2[:N + tau]
+            x1_3, x2_3 = a3[-tau:], a3[:N + tau]
+
+        g2[i] = np.mean(
+            np.conj(x2_3) * np.conj(x2_2) * np.conj(x2_1) *
+            np.conj(x1_3) * np.conj(x1_2) * np.conj(x1_1) *
+            x1_1 * x1_2 * x1_3 *
+            x2_1 * x2_2 * x2_3
+        )
+
+    return taus, g2
+
+def compute_g2_vs_tau_3modes_explicit(a1, a2, a3):
+    """
+    Explicit 3-mode g^(2)(tau).
+    Computes all 81 contributions:
+    G2(tau) = sum_{i,j,k,l} < a_i^*(t) a_j^*(t+tau) a_k(t+tau) a_l(t) >
+    This is mathematically correct but computationally much slower than
+    correlating the total intensity directly.
+    """
+    N = len(a1)
+    taus = np.arange(-N + 1, N)
+    g2_numerator = np.zeros(len(taus), dtype=np.complex128)
+
+    modes = [a1, a2, a3]
+
+    for ti, tau in enumerate(taus):
+        if tau >= 0:
+            segs = [m[:N - tau] for m in modes]     # at time t
+            segs_tau = [m[tau:] for m in modes] # at time t+tau
+        else:
+            segs = [m[-tau:] for m in modes]
+            segs_tau = [m[:N + tau] for m in modes]
+
+        acc = 0.0
+        # loop over i,j,k,l = 0,1,2
+        for i in range(3):
+            for j in range(3):
+                for k in range(3):
+                    for l in range(3):
+                        acc += np.mean(
+                            np.conj(segs[i]) * np.conj(segs_tau[j]) *
+                            segs_tau[k] * segs[l]
+                        )
+        g2_numerator[ti] = acc
+
+    return taus, g2_numerator
+
+
+
 
 def compute_power_spectrum(x, z, zero_pad_factor=8, window=True):
     """
@@ -197,7 +298,7 @@ params3 = {
     'Delta_s': 2.2578e+01, 
     'Delta_m': 6.7804e+00,
     'gtilde': 4.7743e+00,
-    'A_p': 4.8790e+00, 
+    'A_p': 4.6790e+00, 
     'a0': 0 + 0j,
     'b0_dagger': 5.1164e-02 -2.6692e-04j,
     'z_max': 50.0, 
@@ -226,7 +327,7 @@ g1_total = g1_11 + g1_22 + g1_33
 
 # Second-order coherence
 _, g2_11 = compute_g2_vs_tau(a1, a1); _, g2_22 = compute_g2_vs_tau(a2, a2)
-_, g2_33 = compute_g2_vs_tau(a3, a3); _, g2_total = compute_g2_vs_tau(a_total, a_total)
+_, g2_33 = compute_g2_vs_tau(a3, a3); _, g2_total = compute_g2_with_cross_terms(a1, a2, a3)
 g2_total_alt = g2_11 + g2_22 + g2_33
 
 #Alternative g2 calculation using unnormalized method
@@ -234,6 +335,15 @@ taus_2, g2_11_unnorm = compute_g2_unnormalized(a1)
 taus_2, g2_22_unnorm = compute_g2_unnormalized(a2)
 taus_2, g2_33_unnorm = compute_g2_unnormalized(a3)
 taus_2, g2_total_unnorm = compute_g2_unnormalized(a_total)
+
+#More alternative g2 calculation using explicit 3-mode method:
+#taus_3, g2_total_explicit = compute_g2_vs_tau_3modes_explicit(a1, a2, a3)
+#Another alternative g2 calculation using 3-mode method:
+#taus_4, g2_total_3mode = compute_g2_vs_tau_3modes(a1, a2, a3)
+
+
+
+
 
 # --- New g2 calculation from normalized g1 ---
 # Take the absolute value of g1_total
@@ -306,7 +416,32 @@ axs3[1, 1].plot(delay_ns_2, g2_total_unnorm); axs3[1, 1].set_title('Auto: g$^{(2
 for ax in axs3.flat:
     ax.set(xlabel='Delay τ (ns)', ylabel='g$^{(2)}$(τ)|'); ax.grid(True)
 axs3[0,0].set_xlim(-100, 100)
+'''
 
+delay_ns_3 = (taus_3 * dz) * z_to_ns
+delay_ns_4 = (taus_4 * dz) * z_to_ns
+
+# g2 plot
+plt.figure(figsize=(12, 6))
+plt.plot(delay_ns_3, g2_total_explicit)
+plt.title("New g2 explicit Version 1.")
+plt.xlabel('Delay τ (ns)')
+plt.ylabel('g$^{(2)}$(τ)')
+plt.xlim(-100, 100)
+plt.ylim(0, 2)
+plt.grid(True)
+
+
+# g2 plot
+plt.figure(figsize=(12, 6))
+plt.plot(delay_ns_4, g2_total_3mode)
+plt.title("New g2 explicit Version 2.")
+plt.xlabel('Delay τ (ns)')
+plt.ylabel('g$^{(2)}$(τ)')
+plt.xlim(-100, 100)
+plt.ylim(0, 2)
+plt.grid(True)
+'''
 
 
 #Siegert Relation: 1 + |g$^{(1)}_{norm}$|$^2

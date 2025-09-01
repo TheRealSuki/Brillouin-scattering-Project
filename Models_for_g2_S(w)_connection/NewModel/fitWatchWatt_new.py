@@ -153,7 +153,7 @@ def create_fitting_model_with_progress(exp_power_data, param_names, mode_index):
 # --- Main Execution Block ---
 if __name__ == '__main__':
     mode_data_filepaths = [
-        '/home/apolloin/Desktop/Brillouin_Scattering/Brillouin-scattering-Project/Models_for_g2_S(w)_connection/NewModel/fit_lorentzian_1_watt.csv'
+        '/home/apolloin/Desktop/Brillouin_Scattering/Brillouin-scattering-Project/Models_for_g2_S(w)_connection/NewModel/fit_lorentzian_3_watt.csv'
     ]
 
     try:
@@ -181,7 +181,7 @@ if __name__ == '__main__':
             scaling_factor_guess = (peak_watt - noise_floor_guess) / 0.1 
 
 
-            p0 = [31.735, 36.134, 2.0507e+01, 8.46, 4.7697, 4.6790, 0.0, 0.0, 4.9645e-01, -3.8247e-01, 6.8425e-11, 1.2472e-09]
+            p0 = [31.735, 36.134, 2.2122e+01, 6.6977e+00, 4.7697, 4.6790, 0.0, 0.0, 5.7993e-01, -4.8773e-01, 6.8425e-11, 1.2472e-09]
             bounds = ([20, 20, 0, 0, 3, 4.6790, 0, 0, -50, -50, 6.8425e-11, -np.inf],
                       [50, 50, 30, 25, 10, 4.679001, 0.0001, 0.0001, 55, 50, 6.8426e-11, np.inf])
 

@@ -2,9 +2,13 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.linalg import expm
 from scipy.fft import fft, fftshift, fftfreq
+import pandas as pd
 
 # A small constant to prevent division by zero in normalization
 eps = 1e-15
+
+def dbm_to_watts(dbm):
+    return 10 ** ((dbm - 30) / 10)       
 
 def generate_single_mode(p):
     """
@@ -132,18 +136,18 @@ params2 = {
 }
 # Mode 3
 params3 = {
-    'alpha_s': 31.735, 
-    'alpha_p': 36.134, 
-    'Delta_s': 2.2122e+01, 
-    'Delta_m': 6.6977e+00,
-    'gtilde': 4.7697,
-    'A_p': 4.6790, 
+    'alpha_s': 3.1816e+01, 
+    'alpha_p': 3.6518e+01, 
+    'Delta_s': 2.2609e+01, 
+    'Delta_m': 6.7813e+00,
+    'gtilde': 4.7610e+00,
+    'A_p': 4.6790e+00, 
     'a0': 0 + 0j,
-    'b0_dagger': 5.7993e-06 - 4.8773e-07j,
+    'b0_dagger': -1.9798e-02 -4.6948e-02j,
     'z_max': 50.0, 
     'num_points': 8192,
     'scaling_factor': 6.8426e-11,
-    'vertical_shift': 1.2472e-09
+    'vertical_shift': 1.1777e-09
 }
 
 # --- SIMULATION ---
@@ -167,6 +171,7 @@ g1_total = g1_11 + g1_22 + g1_33
 # Second-order coherence
 _, g2_11 = compute_g2_vs_tau(a1, a1); _, g2_22 = compute_g2_vs_tau(a2, a2)
 _, g2_33 = compute_g2_vs_tau(a3, a3); _, g2_total = compute_g2_vs_tau(a_total, a_total)
+g2_total_alt = g2_11 + g2_22 + g2_33
 
 # --- New g2 calculation from normalized g1 ---
 # Take the absolute value of g1_total
@@ -235,10 +240,34 @@ plt.xlim(-100, 100)
 plt.ylim(0, 2)
 plt.grid(True)
 
+
+
+# New normalised g1 plot
+plt.figure(figsize=(12, 6))
+plt.plot(delay_ns, g1_total_normalized)
+plt.title("Sum: g$^{(1)}_{11}$+g$^{(1)}_{22}$+g$^{(1)}_{33}$")
+plt.xlabel('Delay τ (ns)')
+plt.ylabel('g$^{(1)}$(τ)')
+plt.xlim(-100, 100)
+plt.ylim(0, 2)
+plt.grid(True)
+
+
+
 # New normalised g2 plot
 plt.figure(figsize=(12, 6))
 plt.plot(delay_ns, g2_total_normalized)
 plt.title("Auto: g$^{(2)}$(a_total, a_total)")
+plt.xlabel('Delay τ (ns)')
+plt.ylabel('g$^{(2)}$(τ)')
+plt.xlim(-100, 100)
+plt.ylim(0, 2)
+plt.grid(True)
+
+# New normalised g2 plot
+plt.figure(figsize=(12, 6))
+plt.plot(delay_ns, g2_total_alt)
+plt.title("Auto: g$^{(2)}$")
 plt.xlabel('Delay τ (ns)')
 plt.ylabel('g$^{(2)}$(τ)')
 plt.xlim(-100, 100)
@@ -255,6 +284,30 @@ plt.xlim(0, 800)
 plt.ylim(bottom=0)
 plt.xlabel('Frequency (MHz)'); plt.ylabel('Power (W)')
 plt.title('Calibrated Power Spectra'); plt.legend(); plt.grid(True)
+
+
+#Plotting power spectrum and fit together.
+
+df = pd.read_csv('/home/apolloin/Desktop/Brillouin_Scattering/Brillouin-scattering-Project/Models_for_g2_S(w)_connection/heterodyne_fit_curve.csv')
+# The columns are 'fit_power_dBm' and 'frequency_Hz'
+power_dbm_plot = df['fit_power_dBm'].values
+freq_hz_plot = df['frequency_Hz'].values
+freq_mhz_plot = freq_hz_plot / 1e6
+power_watt_plot = dbm_to_watts(power_dbm_plot)
+
+
+# Power spectrum plot
+plt.figure(figsize=(12, 6))
+plt.plot(freq_mhz, S_total_W, label='Total Field', linewidth=2.5, color='blue')
+plt.plot(freq_mhz, S1_W, '--', label="Mode 1")
+plt.plot(freq_mhz, S2_W, '--', label="Mode 2")
+plt.plot(freq_mhz, S3_W, ':', label="Mode 3")
+plt.plot(freq_mhz_plot, power_watt_plot, 'k.', label='Experimental Data', markersize=4)
+plt.xlim(0, 800)
+plt.ylim(bottom=0)
+plt.xlabel('Frequency (MHz)'); plt.ylabel('Power (W)')
+plt.title('Calibrated Power Spectra'); plt.legend(); plt.grid(True)
+
 
 plt.tight_layout(rect=[0, 0.03, 1, 0.95]); plt.show()
 

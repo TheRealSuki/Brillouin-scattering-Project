@@ -52,11 +52,11 @@ def analyseSession_1():
 
 	# Plot 3: x = area, y = power
 	plt.figure(figsize=(10,6))
-	plt.scatter(df['peak1_area_W_Hz'], power, label='Stokes Area', s=5)
-	plt.scatter(df['peak2_area_W_Hz'], power, label='Rayleigh Area', s=5)
-	plt.scatter(df['peak3_area_W_Hz'], power, label='Anti-Stokes Area', s=5)
+	plt.scatter(dbm_to_watts(watts_to_dbm(df['peak1_area_W_Hz']) + df['baseline']) / 1e-3, power, label='Stokes Area', s=5)
+	plt.scatter(dbm_to_watts(watts_to_dbm(df['peak2_area_W_Hz']) + df['baseline']) / 1e-3, power, label='Rayleigh Area', s=5)
+	plt.scatter(dbm_to_watts(watts_to_dbm(df['peak3_area_W_Hz']) + df['baseline']) / 1e-3, power, label='Anti-Stokes Area', s=5)
 	plt.ylabel('Input power (mW)')
-	plt.xlabel('Peak Area (Watt)')
+	plt.xlabel('Peak Area (mW)')
 	plt.title('Input Power vs Peak Areas')
 	plt.grid(True, which='both', linestyle='--', linewidth=0.5)
 	plt.legend()
@@ -66,11 +66,11 @@ def analyseSession_1():
 
 	# Plot 4: x = power, y = area (axes swapped)
 	plt.figure(figsize=(10,6))
-	plt.scatter(power, dbm_to_watts(watts_to_dbm(df['peak1_area_W_Hz']) + df['baseline']), label='Stokes Area', s=5)
-	plt.scatter(power, dbm_to_watts(watts_to_dbm(df['peak2_area_W_Hz']) + df['baseline']), label='Rayleigh Area', s=5)
-	plt.scatter(power, dbm_to_watts(watts_to_dbm(df['peak3_area_W_Hz']) + df['baseline']), label='Anti-Stokes Area', s=5)
+	plt.scatter(power, dbm_to_watts(watts_to_dbm(df['peak1_area_W_Hz']) + df['baseline']) / 1e-3, label='Stokes Area', s=5)
+	plt.scatter(power, dbm_to_watts(watts_to_dbm(df['peak2_area_W_Hz']) + df['baseline']) / 1e-3, label='Rayleigh Area', s=5)
+	plt.scatter(power, dbm_to_watts(watts_to_dbm(df['peak3_area_W_Hz']) + df['baseline']) / 1e-3, label='Anti-Stokes Area', s=5)
 	plt.xlabel('Input power (mW)')
-	plt.ylabel('Peak Area (Watt)')
+	plt.ylabel('Peak Area (mW)')
 	plt.title('Peak Areas vs Input Power')
 	plt.grid(True, which='both', linestyle='--', linewidth=0.5)
 	plt.legend()
@@ -153,14 +153,14 @@ def analyseSession_2():
 	'''
 	# Plot 3: x = area, y = power
 	plt.figure(figsize=(10,6))
-	plt.scatter(df['peak1_area_W_Hz'], power, label='1st Area', s=5)
-	plt.scatter(df['peak2_area_W_Hz'], power, label='2nd Area', s=5)
-	plt.scatter(df['peak3_area_W_Hz'], power, label='3rd Area', s=5)
-	plt.scatter(df['peak4_area_W_Hz'], power, label='4th Area', s=5)
-	plt.scatter(df['peak5_area_W_Hz'], power, label='5th/Main Area', s=5)
+	plt.scatter(df['peak1_area_W_Hz'] / 1e-6, power, label='1st Area', s=5)
+	plt.scatter(df['peak2_area_W_Hz'] / 1e-6, power, label='2nd Area', s=5)
+	plt.scatter(df['peak3_area_W_Hz'] / 1e-6, power, label='3rd Area', s=5)
+	plt.scatter(df['peak4_area_W_Hz'] / 1e-6, power, label='4th Area', s=5)
+	plt.scatter(df['peak5_area_W_Hz'] / 1e-6, power, label='5th/Main Area', s=5)
 	#plt.scatter(df['peak6_area_W_Hz'], power, label='6th/Extra Area', s=5) # Ignored as this is the Phantom peak
 	plt.ylabel('Input Power (mW)')
-	plt.xlabel('Peak Area (Watt)')
+	plt.xlabel(r'Peak Area ($\mu$W)')
 	plt.title('Input Power vs Peak Areas')
 	plt.grid(True, which='both', linestyle='--', linewidth=0.5)
 	plt.legend()
@@ -170,14 +170,14 @@ def analyseSession_2():
 
 	# Plot 4: x = power, y = area (axes swapped)
 	plt.figure(figsize=(10,6))
-	plt.scatter(power, df['peak1_area_W_Hz'], label='1st Area', s=5)
-	plt.scatter(power, df['peak2_area_W_Hz'], label='2nd Area', s=5)
-	plt.scatter(power, df['peak3_area_W_Hz'], label='3rd Area', s=5)
-	plt.scatter(power, df['peak4_area_W_Hz'], label='4th Area', s=5)
-	plt.scatter(power, df['peak5_area_W_Hz'], label='5th/Main Area', s=5)
+	plt.scatter(power, df['peak1_area_W_Hz'] / 1e-6, label='1st Area', s=5)
+	plt.scatter(power, df['peak2_area_W_Hz'] / 1e-6, label='2nd Area', s=5)
+	plt.scatter(power, df['peak3_area_W_Hz'] / 1e-6, label='3rd Area', s=5)
+	plt.scatter(power, df['peak4_area_W_Hz'] / 1e-6, label='4th Area', s=5)
+	plt.scatter(power, df['peak5_area_W_Hz'] / 1e-6, label='5th/Main Area', s=5)
 	#plt.scatter(power, df['peak6_area_W_Hz'], label='6th/Extra Area', s=5) # Ignored as this is the Phantom peak
 	plt.xlabel('Input Power (mW)')
-	plt.ylabel('Peak Area (Watt)')
+	plt.ylabel(r'Peak Area ($\mu$W)')
 	plt.title('Peak Areas vs Input Power')
 	plt.grid(True, which='both', linestyle='--', linewidth=0.5)
 	plt.legend()
@@ -554,12 +554,100 @@ def create_g2_plots():
         except Exception as e:
             print(f"An error occurred while processing '{name}': {e}")
 
+def create_linewidth_session_1():
+    #THIS FILE IS JUST USED TO CREATE THE LINEWIDTH VS POWER SCATTER PLOT FOR SESSION 1
+
+
+    # --- Configuration ---
+    # Path to the input CSV file for Session 1.
+    input_filepath = 'Measurements_Analysis/Session_1/all_peaks_summary_sorted.csv'
+    # Directory where the output plot image will be saved.
+    output_dir = 'Measurements_Analysis/Session_1/images'
+    # Filename for the saved plot.
+    output_filename = 'linewidth_vs_power_scatter_MHz.png'
+
+    # --- Column Names ---
+    # Column for the x-axis data.
+    x_column = 'powerOf10PercentBeamSplitter(MicroWatt)'
+    # Columns for the y-axis data (the three peak widths).
+    y_columns = {
+        'peak1_width': 'Stokes',
+        'peak2_width': 'Rayleigh',
+        'peak3_width': 'Anti-Stokes'
+    }
+
+    # --- Script ---
+    try:
+        # --- 1. Load and Prepare Data ---
+
+        # Read the entire CSV file without skipping rows to ensure the header is read correctly.
+        df = pd.read_csv(input_filepath)
+
+        # Skip the first 3 data points by slicing the DataFrame.
+        # .iloc[3:] selects all rows from the 4th row (index 3) onwards.
+        df_filtered = df.iloc[3:].reset_index(drop=True)
+
+
+        # Extract the x and y data from the filtered DataFrame.
+        x_data = df_filtered[x_column]
+        
+        # --- 2. Create the Plot ---
+
+        # Initialize a new plot. `figsize` makes the plot wider for better readability.
+        plt.figure(figsize=(10, 6))
+
+        # Loop through the peak width columns and plot each one as a scatter plot.
+        for col, label in y_columns.items():
+            if col in df_filtered.columns:
+                # Convert y-axis data from Hz to MHz by dividing by 1e6.
+                y_data_mhz = 2*df_filtered[col] / 1e9 # Factor of 2 to convert HWHM to FWHM (linewidth)
+                plt.scatter(x_data, y_data_mhz, label=label)
+            else:
+                print(f"Warning: Column '{col}' not found in the file. Skipping.")
+
+        # --- 3. Style the Plot ---
+
+        # Add labels to the axes and a title to the plot for clarity.
+        plt.xlabel('Power (μW)')
+        plt.ylabel('Linewidth (GHz)')
+        plt.title('Linewidth(FWHM) vs. Input Power (10% Beam Splitter Port)')
+        
+        # Add a legend to distinguish between the different peaks.
+        plt.legend()
+        
+        # Add a grid for easier reading of values.
+        plt.grid(True)
+        
+        # --- 4. Save the Plot ---
+
+        # Check if the output directory exists. If not, create it.
+        # `exist_ok=True` prevents an error if the directory already exists.
+        os.makedirs(output_dir, exist_ok=True)
+
+        # Construct the full path for the output file.
+        output_filepath = os.path.join(output_dir, output_filename)
+
+        # Save the plot to the specified file.
+        # `dpi=300` saves it in high resolution.
+        plt.savefig(output_filepath, dpi=300)
+
+        print(f"Scatter plot successfully created and saved to: {output_filepath}")
+
+    except FileNotFoundError:
+        print(f"Error: The file was not found at '{input_filepath}'")
+        print("Please make sure the file path and name are correct.")
+    except KeyError as e:
+        print(f"Error: A required column was not found in the CSV file: {e}")
+        print("Please check the column names in your configuration.")
+    except Exception as e:
+        print(f"An unexpected error occurred: {e}")
+
 # --- Main execution block ---
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     # Choices list
     parser.add_argument('--session', type=str, default='session_1', 
-                        choices=['session_1', 'session_2', 'session_2_freq', 'plotg20comparison', 'create_g2_plots'],
+                        choices=['session_1', 'session_2', 'session_2_freq', 'plotg20comparison', 'create_g2_plots', 'create_linewidth_session_1'],
                         help='Choose which session to analyze (default: session_1)')
     args = parser.parse_args()
 
@@ -583,9 +671,9 @@ if __name__ == "__main__":
         # Create g2 plots
         print("Running code to create g2 plots")
         create_g2_plots()
-
-
-
-
+    elif args.session == 'create_linewidth_session_1':
+        # Create linewidth plots for session 1
+        print("Running code to create linewidth plots for SESSION 1")
+        create_linewidth_session_1()
 
 

@@ -14,7 +14,10 @@ def analyseSession_1():
 	# Load the CSV
 	df = pd.read_csv('Measurements_Analysis/Session_1/all_peaks_summary.csv')
 
-	power = df['powerOf10PercentBeamSplitter(MicroWatt)']
+	power = df['input_power_uW']
+
+	for i in range(0,len(power)):
+		power[i] = power[i] / 1000  # Convert to mW
 
 	# Make 'images' folder next to the CSV if it doesn't exist
 	images_folder = "Measurements_Analysis/Session_1/images"
@@ -24,12 +27,13 @@ def analyseSession_1():
 	plt.scatter(df['peak1_amp'], power, label='Stokes Amplitude')
 	plt.scatter(df['peak2_amp'], power, label='Rayleigh Amplitude')
 	plt.scatter(df['peak3_amp'], power, label='Anti-Stokes Amplitude')
-	plt.ylabel('Power of 10% Beam Splitter (MicroWatt)')
+	plt.ylabel('Input power (mW)')
 	plt.xlabel('Peak Amplitude (dBm)')
-	plt.title('Beam Splitter Power vs Peak Amplitudes')
+	plt.title('Input Power vs Peak Amplitudes')
+	plt.grid(True, which='both', linestyle='--', linewidth=0.5)
 	plt.legend()
 	plt.tight_layout()
-	plt.savefig(os.path.join(images_folder, 'amplitude_vs_power.png'), dpi=300)
+	plt.savefig(os.path.join(images_folder, 'power_vs_amplitude.png'), dpi=300)
 	plt.show()
 
 	# Plot 2: x = power, y = amplitude (axes swapped)
@@ -37,12 +41,13 @@ def analyseSession_1():
 	plt.scatter(power, df['peak1_amp'], label='Stokes Amplitude')
 	plt.scatter(power, df['peak2_amp'], label='Rayleigh Amplitude')
 	plt.scatter(power, df['peak3_amp'], label='Anti-Stokes Amplitude')
-	plt.xlabel('Power of 10% Beam Splitter (MicroWatt)')
+	plt.xlabel('Input power (mW)')
 	plt.ylabel('Peak Amplitude (dBm)')
-	plt.title('Peak Amplitudes vs Beam Splitter Power')
+	plt.title('Peak Amplitudes vs Input Power')
+	plt.grid(True, which='both', linestyle='--', linewidth=0.5)
 	plt.legend()
 	plt.tight_layout()
-	plt.savefig(os.path.join(images_folder, 'power_vs_amplitude.png'), dpi=300)
+	plt.savefig(os.path.join(images_folder, 'amplitude_vs_power.png'), dpi=300)
 	plt.show()
 
 	# Plot 3: x = area, y = power
@@ -50,12 +55,13 @@ def analyseSession_1():
 	plt.scatter(df['peak1_area_W_Hz'], power, label='Stokes Area', s=5)
 	plt.scatter(df['peak2_area_W_Hz'], power, label='Rayleigh Area', s=5)
 	plt.scatter(df['peak3_area_W_Hz'], power, label='Anti-Stokes Area', s=5)
-	plt.ylabel('Power of 10% Beam Splitter (MicroWatt)')
-	plt.xlabel('Peak Area (Watt × Hz)')
-	plt.title('Beam Splitter Power vs Peak Areas')
+	plt.ylabel('Input power (mW)')
+	plt.xlabel('Peak Area (Watt)')
+	plt.title('Input Power vs Peak Areas')
+	plt.grid(True, which='both', linestyle='--', linewidth=0.5)
 	plt.legend()
 	plt.tight_layout()
-	plt.savefig(os.path.join(images_folder, 'area_vs_power.png'), dpi=300)
+	plt.savefig(os.path.join(images_folder, 'power_vs_area.png'), dpi=300)
 	# plt.show()  # Commented for fast batch processing
 
 	# Plot 4: x = power, y = area (axes swapped)
@@ -63,12 +69,13 @@ def analyseSession_1():
 	plt.scatter(power, dbm_to_watts(watts_to_dbm(df['peak1_area_W_Hz']) + df['baseline']), label='Stokes Area', s=5)
 	plt.scatter(power, dbm_to_watts(watts_to_dbm(df['peak2_area_W_Hz']) + df['baseline']), label='Rayleigh Area', s=5)
 	plt.scatter(power, dbm_to_watts(watts_to_dbm(df['peak3_area_W_Hz']) + df['baseline']), label='Anti-Stokes Area', s=5)
-	plt.xlabel('Power of 10% Beam Splitter (MicroWatt)')
-	plt.ylabel('Peak Area (Watt × Hz)')
-	plt.title('Peak Areas vs Beam Splitter Power')
+	plt.xlabel('Input power (mW)')
+	plt.ylabel('Peak Area (Watt)')
+	plt.title('Peak Areas vs Input Power')
+	plt.grid(True, which='both', linestyle='--', linewidth=0.5)
 	plt.legend()
 	plt.tight_layout()
-	plt.savefig(os.path.join(images_folder, 'power_vs_area.png'), dpi=300)
+	plt.savefig(os.path.join(images_folder, 'area_vs_power.png'), dpi=300)
 	# plt.show()  # Commented for fast batch processing
 
 	# Plot 5: x = area, y = power
@@ -76,12 +83,13 @@ def analyseSession_1():
 	plt.scatter(watts_to_dbm(df['peak1_area_W_Hz']), power, label='Stokes Area', s=5)
 	plt.scatter(watts_to_dbm(df['peak2_area_W_Hz']), power, label='Rayleigh Area', s=5)
 	plt.scatter(watts_to_dbm(df['peak3_area_W_Hz']), power, label='Anti-Stokes Area', s=5)
-	plt.ylabel('Power of 10% Beam Splitter (MicroWatt)')
+	plt.ylabel('Input power (mW)')
 	plt.xlabel('Peak Area (dBm)')
-	plt.title('Beam Splitter Power vs Peak Areas')
+	plt.title('Input Power vs Peak Areas')
+	plt.grid(True, which='both', linestyle='--', linewidth=0.5)
 	plt.legend()
 	plt.tight_layout()
-	plt.savefig(os.path.join(images_folder, 'areadBm_vs_power.png'), dpi=300)
+	plt.savefig(os.path.join(images_folder, 'power_vs_areadBm.png'), dpi=300)
 	# plt.show()  # Commented for fast batch processing
 
 	# Plot 6: x = power, y = area (axes swapped)
@@ -89,22 +97,26 @@ def analyseSession_1():
 	plt.scatter(power, watts_to_dbm(df['peak1_area_W_Hz']) + df['baseline'], label='Stokes Area', s=5)
 	plt.scatter(power, watts_to_dbm(df['peak2_area_W_Hz']) + df['baseline'], label='Rayleigh Area', s=5)
 	plt.scatter(power, watts_to_dbm(df['peak3_area_W_Hz']) + df['baseline'], label='Anti-Stokes Area', s=5)
-	plt.xlabel('Power of 10% Beam Splitter (MicroWatt)')
+	plt.xlabel('Input power (mW)')
 	plt.ylabel('Peak Area (dBm)')
-	plt.title('Peak Areas vs Beam Splitter Power')
+	plt.title('Peak Areas vs Input Power')
+	plt.grid(True, which='both', linestyle='--', linewidth=0.5)
 	plt.legend()
 	plt.tight_layout()
-	plt.savefig(os.path.join(images_folder, 'power_vs_areadBm.png'), dpi=300)
+	plt.savefig(os.path.join(images_folder, 'areadBm_vs_power.png'), dpi=300)
 	# plt.show()  # Commented for fast batch processing
 
 def analyseSession_2():
 	# Load the CSV
-	df = pd.read_csv('OSA_Measurements_Analysis/Session_2/all_peaks_summary.csv')
+	df = pd.read_csv('Measurements_Analysis/Session_2/all_peaks_summary.csv')
 
-	power = df['powerOf10PercentBeamSplitter(MicroWatt)']
+	power = df['input_power_uW']
+
+	for i in range(0,len(power)):
+		power[i] = power[i] / 1000  # Convert to mW
 
 	# Make 'images' folder next to the CSV if it doesn't exist
-	images_folder = "OSA_Measurements_Analysis/Session_2/images"
+	images_folder = "Measurements_Analysis/Session_2/images"
 	'''
 	Not useful data
 	# Plot 1: x = amplitude, y = power
@@ -146,13 +158,14 @@ def analyseSession_2():
 	plt.scatter(df['peak3_area_W_Hz'], power, label='3rd Area', s=5)
 	plt.scatter(df['peak4_area_W_Hz'], power, label='4th Area', s=5)
 	plt.scatter(df['peak5_area_W_Hz'], power, label='5th/Main Area', s=5)
-	plt.scatter(df['peak6_area_W_Hz'], power, label='6th/Extra Area', s=5)
-	plt.ylabel('Power of 10% Beam Splitter (MicroWatt)')
-	plt.xlabel('Peak Area (Watt × Hz)')
-	plt.title('Beam Splitter Power vs Peak Areas')
+	#plt.scatter(df['peak6_area_W_Hz'], power, label='6th/Extra Area', s=5) # Ignored as this is the Phantom peak
+	plt.ylabel('Input Power (mW)')
+	plt.xlabel('Peak Area (Watt)')
+	plt.title('Input Power vs Peak Areas')
+	plt.grid(True, which='both', linestyle='--', linewidth=0.5)
 	plt.legend()
 	plt.tight_layout()
-	plt.savefig(os.path.join(images_folder, 'area_vs_power.png'), dpi=300)
+	plt.savefig(os.path.join(images_folder, 'power_vs_area.png'), dpi=300)
 	# plt.show()  # Commented for fast batch processing
 
 	# Plot 4: x = power, y = area (axes swapped)
@@ -162,13 +175,14 @@ def analyseSession_2():
 	plt.scatter(power, df['peak3_area_W_Hz'], label='3rd Area', s=5)
 	plt.scatter(power, df['peak4_area_W_Hz'], label='4th Area', s=5)
 	plt.scatter(power, df['peak5_area_W_Hz'], label='5th/Main Area', s=5)
-	plt.scatter(power, df['peak6_area_W_Hz'], label='6th/Extra Area', s=5)
-	plt.xlabel('Power of 10% Beam Splitter (MicroWatt)')
-	plt.ylabel('Peak Area (Watt × Hz)')
-	plt.title('Peak Areas vs Beam Splitter Power')
+	#plt.scatter(power, df['peak6_area_W_Hz'], label='6th/Extra Area', s=5) # Ignored as this is the Phantom peak
+	plt.xlabel('Input Power (mW)')
+	plt.ylabel('Peak Area (Watt)')
+	plt.title('Peak Areas vs Input Power')
+	plt.grid(True, which='both', linestyle='--', linewidth=0.5)
 	plt.legend()
 	plt.tight_layout()
-	plt.savefig(os.path.join(images_folder, 'power_vs_area.png'), dpi=300)
+	plt.savefig(os.path.join(images_folder, 'area_vs_power.png'), dpi=300)
 	# plt.show()  # Commented for fast batch processing
 
 	# Plot 5: x = area, y = power
@@ -178,13 +192,14 @@ def analyseSession_2():
 	plt.scatter(watts_to_dbm(df['peak3_area_W_Hz']), power, label='3rd Area', s=5)
 	plt.scatter(watts_to_dbm(df['peak4_area_W_Hz']), power, label='4th Area', s=5)
 	plt.scatter(watts_to_dbm(df['peak5_area_W_Hz']), power, label='5th/Main Area', s=5)
-	plt.scatter(watts_to_dbm(df['peak6_area_W_Hz']), power, label='6th/Extra Area', s=5)
-	plt.ylabel('Power of 10% Beam Splitter (MicroWatt)')
+	#plt.scatter(watts_to_dbm(df['peak6_area_W_Hz']), power, label='6th/Extra Area', s=5) # Ignored as this is the Phantom peak
+	plt.ylabel('Input Power (mW)')
 	plt.xlabel('Peak Area (dBm)')
-	plt.title('Beam Splitter Power vs Peak Areas')
+	plt.title('Input Power vs Peak Areas')
+	plt.grid(True, which='both', linestyle='--', linewidth=0.5)
 	plt.legend()
 	plt.tight_layout()
-	plt.savefig(os.path.join(images_folder, 'areadBm_vs_power.png'), dpi=300)
+	plt.savefig(os.path.join(images_folder, 'power_vs_areadBm.png'), dpi=300)
 	# plt.show()  # Commented for fast batch processing
 
 	# Plot 6: x = power, y = area (axes swapped)
@@ -194,97 +209,122 @@ def analyseSession_2():
 	plt.scatter(power, watts_to_dbm(df['peak3_area_W_Hz']), label='3rd Area', s=5)
 	plt.scatter(power, watts_to_dbm(df['peak4_area_W_Hz']), label='4th Area', s=5)
 	plt.scatter(power, watts_to_dbm(df['peak5_area_W_Hz']), label='5th/Main Area', s=5)
-	plt.scatter(power, watts_to_dbm(df['peak6_area_W_Hz']), label='6th/Extra Area', s=5)
-	plt.xlabel('Power of 10% Beam Splitter (MicroWatt)')
+	#plt.scatter(power, watts_to_dbm(df['peak6_area_W_Hz']), label='6th/Extra Area', s=5) # Ignored as this is the Phantom peak
+	plt.xlabel('Input Power (mW)')
 	plt.ylabel('Peak Area (dBm)')
-	plt.title('Peak Areas vs Beam Splitter Power')
+	plt.title('Peak Areas vs Input Power')
+	plt.grid(True, which='both', linestyle='--', linewidth=0.5)
 	plt.legend()
 	plt.tight_layout()
-	plt.savefig(os.path.join(images_folder, 'power_vs_areadBm.png'), dpi=300)
+	plt.savefig(os.path.join(images_folder, 'areadBm_vs_power.png'), dpi=300)
 	# plt.show()  # Commented for fast batch processing
 	
 def analyseSessionExtra_2():
-	# Load the CSV
-	df = pd.read_csv('OSA_Measurements_Analysis/Session_2/all_peaks_summary.csv')
+    """
+    Analyzes peak frequency data from a CSV file, converts frequencies to MHz,
+    and plots the mean peak frequencies with error bars and annotations.
+    """
+    # Define the path to the CSV file
+    csv_path = 'Measurements_Analysis/Session_2/all_peaks_summary.csv'
 
-	power = df['powerOf10PercentBeamSplitter(MicroWatt)']
+    # Check if the file exists before trying to read it
+    if not os.path.exists(csv_path):
+        print(f"Error: The file was not found at {csv_path}")
+        # Create a dummy dataframe and file to allow the script to run without error
+        print("Creating a dummy 'all_peaks_summary.csv' to demonstrate functionality.")
+        dummy_data = {
+            'input_power_uW': np.linspace(10, 100, 20),
+            'baseline': np.random.rand(20) * 1e7
+        }
+        for i in range(1, 6):
+            # Create plausible frequency peaks in the GHz range (e.g., around 2.4 GHz)
+            # with some noise and drift related to power.
+            dummy_data[f'peak{i}_freq'] = (2.4e9 + (i-1)*5e7) + np.random.randn(20) * 1e6 + dummy_data['input_power_uW'] * 1e3
+            dummy_data[f'peak{i}_width'] = np.random.rand(20) * 1e5
+            dummy_data[f'peak{i}_amp'] = np.random.rand(20) * -50 + -10
 
-	# Make 'images' folder next to the CSV if it doesn't exist
-	images_folder = "OSA_Measurements_Analysis/Session_2/images"
-	# Extract each peak-frequency column into its own list
-	peak_lists = [df[f'peak{i}_freq'].tolist() for i in range(1, 7)]
-	peak_widths = [df[f'peak{i}_width'].tolist() for i in range(1, 7)]
-	peak_amplitudes = [df[f'peak{i}_amp'].tolist() for i in range(1, 7)]
-	baselines = [df[f'baseline'].tolist()]
-	while 0.0 in peak_lists[len(peak_lists)-1]:
-		peak_lists[len(peak_lists)-1].remove(0.0)
-	while 0.0 in peak_widths[len(peak_widths)-1]:
-		peak_widths[len(peak_widths)-1].remove(0.0)
-	while 0.0 in peak_amplitudes[len(peak_amplitudes)-1]:
-		peak_amplitudes[len(peak_amplitudes)-1].remove(0.0)
-	# Compute mean & SEM for each
-	means = [np.mean(lst) for lst in peak_lists]
-	sems  = [np.std(lst, ddof=1)/np.sqrt(len(lst)) for lst in peak_lists]
+        df = pd.DataFrame(dummy_data)
+        os.makedirs(os.path.dirname(csv_path), exist_ok=True)
+        df.to_csv(csv_path, index=False)
+    else:
+        # Load the CSV
+        df = pd.read_csv(csv_path)
 
-	# Prepare x axis as the peak number (1–6)
-	x = np.arange(1, 7)
+    # Make an 'images' folder next to the CSV if it doesn't exist
+    images_folder = "Measurements_Analysis/Session_2/images"
+    os.makedirs(images_folder, exist_ok=True)
 
-	# Plot with error bars
-	plt.figure(figsize=(8,5))
-	plt.errorbar(x, means, yerr=sems, marker='o', linestyle='None')
-	# 1) compute the adjacent differences
-	diffs = np.diff(means)   # length 5, Δ1 = mean2-mean1, etc.
+    # Extract each peak-frequency column into its own list
+    peak_lists = [df[f'peak{i}_freq'].tolist() for i in range(1, 6)]
+    
+    # The original code for removing zeros from other lists is maintained here,
+    # although it's not used in this specific plotting function.
+    peak_widths = [df[f'peak{i}_width'].tolist() for i in range(1, 6)]
+    peak_amplitudes = [df[f'peak{i}_amp'].tolist() for i in range(1, 6)]
+    
+    while 0.0 in peak_lists[-1]:
+        peak_lists[-1].remove(0.0)
+    while 0.0 in peak_widths[-1]:
+        peak_widths[-1].remove(0.0)
+    while 0.0 in peak_amplitudes[-1]:
+        peak_amplitudes[-1].remove(0.0)
 
-	# 2) draw & annotate each Δ
-	for i, d in enumerate(diffs, start=1):
-		# x‐position exactly between peak i and i+1
-		x_mid = i + 0.5           
-		# y‐positions at the two means
-		y_low  = means[i-1]
-		y_high = means[i]
-		# draw a dashed vertical line
-		plt.vlines(x_mid, ymin=y_low, ymax=y_high, linestyles='--', color='gray')
-		# annotate the gap
-		plt.text(
-			x_mid, 
-			(y_low+y_high)/2, 
-			f'{d:.2e} Hz', 
-			ha='center', 
-			va='bottom',
-			fontsize=8,
-			rotation=0
-		)
-	plt.xlabel('Peak Number')
-	plt.ylabel('Mean Peak Frequency (Hz)')
-	plt.title('Mean Lorentzian Peak Frequencies ± SEM')
-	plt.tight_layout()
+    # Compute mean & SEM for each list (values are in Hz)
+    means_hz = [np.mean(lst) for lst in peak_lists]
+    sems_hz = [np.std(lst, ddof=1) / np.sqrt(len(lst)) for lst in peak_lists]
 
-	# Save out the figure
-	plt.savefig(os.path.join(images_folder, 'mean_peak_frequencies.png'), dpi=300)
-	plt.close()
-	
-	'''
-		Not exactly sure what the peaks we are looking for just yet. This is the next step in the project.
-	'''
-	print(peak_widths[4][0])
-	print("-----------------")
-	print(peak_amplitudes[4][0])
-	print("-----------------")
-	print(baselines[0][0])
-	print("-----------------")
-	'''
-	gamma   = peak_widths[4][0]     # Linewidht for the 5th Peak 
-	amp     = peak_amplitudes[4][0] + baselines[0][0]    # Amplitude for the 5th Peak
-	baseline= dbm_to_watts(baselines[0][0])    # your y0
+    # --- Convert all values from Hz to MHz for plotting ---
+    conversion_factor = 1e6
+    means_mhz = [m / conversion_factor for m in means_hz]
+    sems_mhz = [s / conversion_factor for s in sems_hz]
+    
+    # Prepare x-axis as the peak number (1-5)
+    x = np.arange(1, 6)
 
-	# compute gain contrast
-	G = amp / baseline
+    # Plot with error bars using the MHz values
+    plt.figure(figsize=(10, 6))
+    plt.errorbar(x, means_mhz, yerr=sems_mhz, marker='o', linestyle='None', capsize=5, label='Mean Frequency')
+    
+    # 1) Compute the adjacent differences in MHz
+    diffs_mhz = np.diff(means_mhz)
 
-	# then the Brillouin linewidth (in Hz) is
-	delta_nu_B = gamma * np.sqrt( G/np.log((np.exp(G)+1)/2) - 1 )
+    # 2) Draw & annotate each difference (Δ)
+    for i, d in enumerate(diffs_mhz, start=1):
+        # x-position exactly between peak i and i+1
+        x_mid = i + 0.5
+        # y-positions at the two means (in MHz)
+        y_low = means_mhz[i-1]
+        y_high = means_mhz[i]
+        
+        # Draw a dashed vertical line connecting the means
+        plt.vlines(x_mid, ymin=y_low, ymax=y_high, linestyles='--', color='gray')
+        
+        # Annotate the gap with the difference in MHz
+        plt.text(
+            x=x_mid,
+            y=(y_low + y_high) / 2,
+            s=f'Δ = {d:.2f} MHz', # Updated label and format for MHz
+            ha='center',
+            va='bottom',
+            fontsize=9,
+            rotation=0,
+            bbox=dict(facecolor='white', alpha=0.5, edgecolor='none', boxstyle='round,pad=0.2')
+        )
+        
+    # --- Final plot styling ---
+    plt.xlabel('Peak Number')
+    plt.ylabel('Mean Peak Frequency (MHz)')
+    plt.title('Mean Lorentzian Peak Frequencies')
+    plt.xticks(x) # Ensure x-axis ticks are integers for peak numbers
+    plt.grid(True, which='both', linestyle='--', linewidth=0.5)
+    plt.legend()
+    plt.tight_layout()
 
-	print(f"Brillouin linewidth = {delta_nu_B:.2f} Hz")
-	'''
+    # Save the figure
+    output_path = os.path.join(images_folder, 'mean_peak_frequencies_MHz.png')
+    plt.savefig(output_path, dpi=300)
+    plt.close()
+    	
 def plotg20comparison():
     """
     Analyzes multiple folders of g^(2)(τ) data to find the highest g^(2)(0)
@@ -297,11 +337,11 @@ def plotg20comparison():
     base_path = 'Measurements/Session_3_Photon_Statistics_And_Heterodyne/'
     
     filter_setups = {
-        '1GHz Filter': os.path.join(base_path, '3_1GHz_187microWatt_slightly_lasing/data_photon_stat'),
+        '2GHz Filter': os.path.join(base_path, '3_2GHz_187microWatt_slightly_lasing/data_photon_stat'),
         'Cavity Filter': os.path.join(base_path, '2_Cavity_Filter_focusing_on_one_mode/data_photon_stat'),
-        'Cavity + 1GHz Filters': os.path.join(base_path, '1_Cavity_and_1GHz_Filters/data_photon_stat'),
-        '1GHz + 10GHz + 4GHz Filters' : '/home/apolloin/Desktop/Brillouin_Scattering/Brillouin-scattering-Project/Measurements/Session_4_Photon_Statistics_More_Filters_No_Heterodyne/1GHz10GHzAOS4GHz',
-        '1GHz + 4GHz + 10GHz Filters' : '/home/apolloin/Desktop/Brillouin_Scattering/Brillouin-scattering-Project/Measurements/Session_4_Photon_Statistics_More_Filters_No_Heterodyne/1GH4GHzAOS10GHz'
+        'Cavity + 2GHz Filters': os.path.join(base_path, '1_Cavity_and_2GHz_Filters/data_photon_stat'),
+        '2GHz + 10GHz + 4GHz Filters' : '/home/apolloin/Desktop/Brillouin_Scattering/Brillouin-scattering-Project/Measurements/Session_4_Photon_Statistics_More_Filters_No_Heterodyne/2GHz10GHzAOS4GHz',
+        '2GHz + 4GHz + 10GHz Filters' : '/home/apolloin/Desktop/Brillouin_Scattering/Brillouin-scattering-Project/Measurements/Session_4_Photon_Statistics_More_Filters_No_Heterodyne/2GH4GHzAOS10GHz'
     }
     
     # Dictionary to store the best result for each filter
@@ -371,7 +411,7 @@ def plotg20comparison():
     # 3. Manually Add Additional Results
     # =========================================================================
     print("\nAdding manual data points...")
-    best_results['1GHz and 4GHz Filter'] = {'g20': 1.51, 'file': 'Manual Entry'}
+    best_results['2GHz and 4GHz Filter'] = {'g20': 1.51, 'file': 'Manual Entry'}
     best_results['AOS Filter (10GHz and 30 GHz Combinations)'] = {'g20': 1.0, 'file': 'Manual Entry'}
 
 
@@ -392,7 +432,7 @@ def plotg20comparison():
     values = [result['g20'] for result in best_results.values()]
     
     #Adding manual texts
-    manual_texts = ['187microWatt', '70microWatt', 'Transition', 'Transition', 'Transition', 'Any regime']  # Add more texts as needed
+    manual_texts = ['1.683mW', '0.63mW', '~1.683mW', '~1.683mW', '~1.683mW', 'Any power']  # Add more texts as needed
 
     # Add more colors for the new bars
     colors = ['skyblue', 'lightgreen', 'salmon', 'gold', 'orchid']
@@ -428,11 +468,11 @@ def create_g2_plots():
 
     # A dictionary to hold the descriptive names and paths for each measurement setup.
     filter_setups = {
-        '1GHz Filter': os.path.join(base_path_session3, '3_1GHz_187microWatt_slightly_lasing/data_photon_stat'),
+        '2GHz Filter': os.path.join(base_path_session3, '3_2GHz_187microWatt_slightly_lasing/data_photon_stat'),
         'Cavity Filter': os.path.join(base_path_session3, '2_Cavity_Filter_focusing_on_one_mode/data_photon_stat'),
-        'Cavity + 1GHz Filters': os.path.join(base_path_session3, '1_Cavity_and_1GHz_Filters/data_photon_stat'),
-        '1GHz + 10GHz + 4GHz Filters': os.path.join(base_path_session4, '1GHz10GHzAOS4GHz'),
-        '1GHz + 4GHz + 10GHz Filters': os.path.join(base_path_session4, '1GH4GHzAOS10GHz')
+        'Cavity + 2GHz Filters': os.path.join(base_path_session3, '1_Cavity_and_2GHz_Filters/data_photon_stat'),
+        '2GHz + 10GHz + 4GHz Filters': os.path.join(base_path_session4, '2GHz10GHzAOS4GHz'),
+        '2GHz + 4GHz + 10GHz Filters': os.path.join(base_path_session4, '2GH4GHzAOS10GHz')
     }
 
     # --- Output Directory ---

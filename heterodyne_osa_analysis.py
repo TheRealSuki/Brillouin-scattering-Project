@@ -427,27 +427,34 @@ def analyze_session2():
 
 				idxs = [np.searchsorted(dense_x, b) for b in boundaries]
 
+				# --- Dynamic Y-axis scaling logic ---
+				max_power_watt = np.max(fit_y_watt)
+				if max_power_watt >= 1e-12:
+					y_conversion_factor, y_unit = 1e12, 'pW' # picowatts
+				else:
+					y_conversion_factor, y_unit = 1e15, 'fW' # femtowatts
+
 				# Plot with integration regions for all 6
 				plt.figure(figsize=(10, 6))
-				plt.plot(dense_x, fit_y_watt, label='Fitted curve (Watts)', color='blue')
-				plt.plot(dense_x, np.full_like(dense_x, baseline_watt), 
-				     label='Baseline (Watts)', color='gray', linestyle='--')
-				plt.plot(dense_x, net_fit_y, label='Net fit (Watts - baseline)', color='red')
+				plt.plot(dense_x_mhz, fit_y_watt*y_conversion_factor, label=f'Fitted curve ({y_unit})', color='blue')
+				plt.plot(dense_x_mhz, np.full_like(dense_x_mhz, baseline_watt*y_conversion_factor), 
+				     label=f'Baseline ({y_unit})', color='gray', linestyle='--')
+				plt.plot(dense_x_mhz, net_fit_y*y_conversion_factor, label=f'Net fit ({y_unit} - baseline)', color='red')
 
 				colors = ['lightblue', 'lightgreen', 'navajowhite', 'pink', 'plum', 'lightcoral']
 				for i in range(6):
-					plt.axvspan(dense_x[idxs[i]], dense_x[idxs[i+1]], color=colors[i], alpha=0.3, label=f'Peak {i+1} region')
+					plt.axvspan(dense_x[idxs[i]] / 1e6, dense_x[idxs[i+1]] / 1e6, color=colors[i], alpha=0.3, label=f'Peak {i+1} region')
 
 				for i in range(1, 6):
-					plt.axvline(dense_x[idxs[i]], color='gray', linestyle=':', label=f'Boundary {i}')
+					plt.axvline(dense_x[idxs[i]] / 1e6, color='gray', linestyle=':', label=f'Boundary {i}')
 
-				plt.xlabel('Frequency (Hz)')
-				plt.ylabel('Power (Watt)')
-				plt.title('Fit and Integration Regions (in Watts)')
+				plt.xlabel('Frequency (MHz)')
+				plt.ylabel(f'Power ({y_unit})')
+				plt.title(f'Fit and Integration Regions ({y_unit})')
 				plt.grid(True, which='both', linestyle='--', linewidth=0.5)
 				plt.legend(loc='upper right', fontsize=8)
 				plt.tight_layout()
-				max_display = max(np.max(fit_y_watt), np.max(net_fit_y)) * 1.1
+				max_display = max(np.max(fit_y_watt), np.max(net_fit_y)) * 1.1 * y_conversion_factor
 				plt.ylim(bottom=0, top=max_display)
 
 				save_path = os.path.join(image_folder, f'{str(round(float(just_name[:-14])*9/1000, 2))}_Watt.png')
@@ -591,29 +598,36 @@ def analyze_session2():
 				net_fit_y = fit_y_watt - baseline_watt
 
 				idxs = [np.searchsorted(dense_x, b) for b in boundaries]
+
+				# --- Dynamic Y-axis scaling logic ---
+				max_power_watt = np.max(fit_y_watt)
+				if max_power_watt >= 1e-12:
+					y_conversion_factor, y_unit = 1e12, 'pW' # picowatts
+				else:
+					y_conversion_factor, y_unit = 1e15, 'fW' # femtowatts
 				
 
 				# Plot with integration regions for all 5
 				plt.figure(figsize=(10, 6))
-				plt.plot(dense_x, fit_y_watt, label='Fitted curve (Watts)', color='blue')
-				plt.plot(dense_x, np.full_like(dense_x, baseline_watt), 
-				     label='Baseline (Watts)', color='gray', linestyle='--')
-				plt.plot(dense_x, net_fit_y, label='Net fit (Watts - baseline)', color='red')
+				plt.plot(dense_x_mhz, fit_y_watt*y_conversion_factor, label=f'Fitted curve ({y_unit})', color='blue')
+				plt.plot(dense_x_mhz, np.full_like(dense_x_mhz, baseline_watt*y_conversion_factor), 
+				     label=f'Baseline ({y_unit})', color='gray', linestyle='--')
+				plt.plot(dense_x_mhz, net_fit_y*y_conversion_factor, label=f'Net fit ({y_unit} - baseline)', color='red')
 
 				colors = ['lightblue', 'lightgreen', 'navajowhite', 'pink', 'plum', 'lightcoral']
 				for i in range(5):
-					plt.axvspan(dense_x[idxs[i]], dense_x[idxs[i+1]], color=colors[i], alpha=0.3, label=f'Peak {i+1} region')
+					plt.axvspan(dense_x[idxs[i]] / 1e6, dense_x[idxs[i+1]] / 1e6, color=colors[i], alpha=0.3, label=f'Peak {i+1} region')
 
 				for i in range(1, 5):
-					plt.axvline(dense_x[idxs[i]], color='gray', linestyle=':', label=f'Boundary {i}')
+					plt.axvline(dense_x[idxs[i]] / 1e6, color='gray', linestyle=':', label=f'Boundary {i}')
 
-				plt.xlabel('Frequency (Hz)')
-				plt.ylabel('Power (Watt)')
-				plt.title('Fit and Integration Regions (in Watts)')
+				plt.xlabel('Frequency (MHz)')
+				plt.ylabel(f'Power ({y_unit})')
+				plt.title(f'Fit and Integration Regions ({y_unit})')
 				plt.grid(True, which='both', linestyle='--', linewidth=0.5)
 				plt.legend(loc='upper right', fontsize=8)
 				plt.tight_layout()
-				max_display = max(np.max(fit_y_watt), np.max(net_fit_y)) * 1.1
+				max_display = max(np.max(fit_y_watt), np.max(net_fit_y)) * 1.1 * y_conversion_factor
 				plt.ylim(bottom=0, top=max_display)
 
 				save_path = os.path.join(image_folder, f'{str(round(float(just_name[:-14])*9/1000, 2))}_Watt.png')

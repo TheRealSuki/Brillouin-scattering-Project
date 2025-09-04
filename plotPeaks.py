@@ -601,16 +601,17 @@ def create_linewidth_session_1():
             if col in df_filtered.columns:
                 # Convert y-axis data from Hz to MHz by dividing by 1e6.
                 y_data_mhz = 2*df_filtered[col] / 1e9 # Factor of 2 to convert HWHM to FWHM (linewidth)
-                plt.scatter(x_data, y_data_mhz, label=label)
+                x_data_mW = x_data*9/1000 # Convert to mW
+                plt.scatter(x_data_mW, y_data_mhz, label=label)
             else:
                 print(f"Warning: Column '{col}' not found in the file. Skipping.")
 
         # --- 3. Style the Plot ---
 
         # Add labels to the axes and a title to the plot for clarity.
-        plt.xlabel('Power (μW)')
+        plt.xlabel('Power (mW)')
         plt.ylabel('Linewidth (GHz)')
-        plt.title('Linewidth(FWHM) vs. Input Power (10% Beam Splitter Port)')
+        plt.title('Linewidth(FWHM) vs. Input Power')
         
         # Add a legend to distinguish between the different peaks.
         plt.legend()

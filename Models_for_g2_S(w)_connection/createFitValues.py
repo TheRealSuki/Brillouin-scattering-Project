@@ -49,7 +49,7 @@ def load_and_process_heterodyne_data(filepath):
 if __name__ == '__main__':
     
     # --- 1. LOAD EXPERIMENTAL DATA ---
-    filepath = '/home/apolloin/Desktop/Brillouin_Scattering/Brillouin-scattering-Project/Measurements/Session_3_Photon_Statistics_And_Heterodyne/3_1GHz_187microWatt_slightly_lasing/data_heterodyne/g21Ghz001.csv'
+    filepath = '/home/apolloin/Desktop/Brillouin_Scattering/Brillouin-scattering-Project/Measurements/Session_3_Photon_Statistics_And_Heterodyne/3_2GHz_187microWatt_slightly_lasing/data_heterodyne/g21Ghz001.csv'
     
     try:
         exp_freq_hz, exp_power_dbm = load_and_process_heterodyne_data(filepath)
@@ -116,7 +116,7 @@ if __name__ == '__main__':
         
         plt.xlabel('Frequency (Hz)')
         plt.ylabel('Power (dBm)')
-        plt.title('Heterodyne Data with Triple Lorentzian Fit (1GHz Filter)')
+        plt.title('Heterodyne Data with Triple Lorentzian Fit (2GHz Filter)')
         plt.legend()
         plt.grid(True)
         plt.ylim(bottom=np.min(exp_power_dbm) - 5, top=np.max(exp_power_dbm) + 5)
@@ -130,7 +130,7 @@ if __name__ == '__main__':
 
         plt.xlabel('Frequency (Hz)')
         plt.ylabel('Power (Watt)')
-        plt.title('Heterodyne Data with Triple Lorentzian Fit (1GHz Filter)')
+        plt.title('Heterodyne Data with Triple Lorentzian Fit (2GHz Filter)')
         plt.legend()
         plt.grid(True)
         plt.show()

@@ -97,24 +97,24 @@ if __name__ == '__main__':
         plt.figure(figsize=(14, 8))
         
         # Plot the raw data
-        plt.plot(exp_freq_hz, exp_power_dbm, '.', label='Experimental Data', alpha=0.5)
-        
+        plt.plot(exp_freq_hz / 1e6, exp_power_dbm, '.', label='Experimental Data', alpha=0.5)
+
         # Create a dense frequency axis for a smooth plot of the fit
         dense_freq_hz = np.linspace(exp_freq_hz.min(), exp_freq_hz.max(), 2000)
         
         # Plot the total fit and the individual Lorentzian components
         fit_total = triple_lorentzian(dense_freq_hz, *popt)
-        plt.plot(dense_freq_hz, fit_total, 'k-', label='Total Lorentzian Fit', linewidth=2)
-        
+        plt.plot(dense_freq_hz / 1e6, fit_total, 'k-', label='Total Lorentzian Fit', linewidth=2)
+
         lorentz1 = lorentzian(dense_freq_hz, popt[0], popt[1], popt[2], popt[9])
         lorentz2 = lorentzian(dense_freq_hz, popt[3], popt[4], popt[5], popt[9])
         lorentz3 = lorentzian(dense_freq_hz, popt[6], popt[7], popt[8], popt[9])
 
-        plt.plot(dense_freq_hz, lorentz1, '--', label=f'Peak 1 (f0={popt[0]/1e6:.2f} MHz)')
-        plt.plot(dense_freq_hz, lorentz2, '--', label=f'Peak 2 (f0={popt[3]/1e6:.2f} MHz)')
-        plt.plot(dense_freq_hz, lorentz3, '--', label=f'Peak 3 (f0={popt[6]/1e6:.2f} MHz)')
-        
-        plt.xlabel('Frequency (Hz)')
+        plt.plot(dense_freq_hz / 1e6, lorentz1, '--', label=f'Peak 1 (f0={popt[0]/1e6:.2f} MHz)')
+        plt.plot(dense_freq_hz / 1e6, lorentz2, '--', label=f'Peak 2 (f0={popt[3]/1e6:.2f} MHz)')
+        plt.plot(dense_freq_hz / 1e6, lorentz3, '--', label=f'Peak 3 (f0={popt[6]/1e6:.2f} MHz)')
+
+        plt.xlabel('Frequency (MHz)')
         plt.ylabel('Power (dBm)')
         plt.title('Heterodyne Data with Triple Lorentzian Fit (2GHz Filter)')
         plt.legend()

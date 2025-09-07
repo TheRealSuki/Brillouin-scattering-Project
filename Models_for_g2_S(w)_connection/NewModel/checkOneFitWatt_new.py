@@ -67,13 +67,11 @@ def compute_power_spectrum(x, z, zero_pad_factor=8, window=True):
 
 # --- Main Execution Block ---
 if __name__ == '__main__':
-    # --- 1. SET YOUR TARGET DATA FILE ---
-    # This is the experimental data you want to plot against.
+    # --- 1. SET TARGET DATA FILE ---
     target_data_filepath = '/home/apolloin/Desktop/Brillouin_Scattering/Brillouin-scattering-Project/Models_for_g2_S(w)_connection/NewModel/fit_lorentzian_1_watt.csv'
 
-    # --- 2. MANUALLY DEFINE YOUR PARAMETERS HERE ---
-    # I've pre-filled this with the initial 'p0' values from your last fitting script as an example.
-    # Change these values to test any combination you like.
+    # --- 2. MANUALLY DEFINE PARAMETERS HERE ---
+
 
     manual_params_dict = {
         'alpha_s': 31.735,

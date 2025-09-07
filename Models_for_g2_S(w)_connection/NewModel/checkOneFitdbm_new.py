@@ -79,18 +79,16 @@ def load_dataset(filepath):
 if __name__ == '__main__':
     # --- 1. USER INPUT SECTION ---
     
-    # Specify the path to the experimental data you want to plot against
     target_data_filepath = '/home/apolloin/Desktop/Brillouin_Scattering/Brillouin-scattering-Project/Models_for_g2_S(w)_connection/OldModel/fit_lorentzian_3.csv'
 
     # Define the parameters for each mode you want to simulate.
-    # You can add more dictionaries to this list to simulate more modes.
     mode_params_list = [
         {
             # Mode 1 Parameters
             'alpha_s': 31.735, 
             'alpha_p': 39.134, 
-            'Delta_s': 22, # Does oscillations in the line, small oscillations (can make it Lorentzian I guess?)
-            'Delta_m': 6.5,  # Does oscillations in the line, small oscillations (Lorentzain width I guess?)
+            'Delta_s': 22, # Does oscillations in the line, small oscillations (can make it Lorentzian I guess?) shifts
+            'Delta_m': 7.5,  # Does oscillations in the line, small oscillations (Lorentzain width I guess?) narrows up 
             'gtilde': 4.7697,  # Coupling strength
             'A_p': 4.6790,      # Pump amplitude
             'a0': 0,       # Initial Stokes field (complex), honestly it does not contribute anything

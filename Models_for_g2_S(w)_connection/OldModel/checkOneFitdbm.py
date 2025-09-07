@@ -96,7 +96,7 @@ def load_and_process_lorentzian_fit_data(filepath):
 if __name__ == '__main__':
     
     # =========================================================================
-    # --- 1. SET YOUR PARAMETERS HERE ---
+    # --- 1. SET PARAMETERS HERE ---
     # =========================================================================
     # Enter the parameters you want to test. You can copy the 'p_opt' (from fitWatchdbm.py)
     # values from a successful fit here to validate the result.

@@ -527,8 +527,6 @@ def run_simulation(p):
 
     A = (chi_s + chi_m) / 2
     # Use np.lib.scimath.sqrt for complex square roots
-    # Note: The user's notes had a minus sign under the root, but standard solutions
-    # for this type of system (Bogoliubov transformation) use a plus sign.
     # Using the standard form here.
     D = np.lib.scimath.sqrt((chi_s - chi_m)**2 + 4 * k_j * np.conj(k_j))
 

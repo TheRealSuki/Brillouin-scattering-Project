@@ -104,9 +104,6 @@ def analyze_photon_data(filename):
 
 # --- Main execution ---
 if __name__ == '__main__':
-    # The filename you provided.
-    # IMPORTANT: Make sure this file is in the same directory as the script,
-    # or provide the full, absolute path to the file.
     filename = 'Measurements/Session_4_Photon_Statistics_More_Filters_No_Heterodyne/1GH4GHzAOS10GHz/1GHz4Ghz10GHzAOS_0.1nFilter.csv'
     
     # Run the analysis

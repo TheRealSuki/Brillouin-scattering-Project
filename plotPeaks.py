@@ -66,9 +66,9 @@ def analyseSession_1():
 
 	# Plot 4: x = power, y = area (axes swapped)
 	plt.figure(figsize=(10,6))
-	plt.scatter(power, dbm_to_watts(watts_to_dbm(df['peak1_area_W_Hz']) + df['baseline']) / 1e-3, label='Stokes Area', s=5)
-	plt.scatter(power, dbm_to_watts(watts_to_dbm(df['peak2_area_W_Hz']) + df['baseline']) / 1e-3, label='Rayleigh Area', s=5)
-	plt.scatter(power, dbm_to_watts(watts_to_dbm(df['peak3_area_W_Hz']) + df['baseline']) / 1e-3, label='Anti-Stokes Area', s=5)
+	plt.scatter(power, dbm_to_watts(watts_to_dbm(df['peak1_area_W_Hz']) + df['baseline']) / 1e-3, label='Stokes Area', s=25)
+	plt.scatter(power, dbm_to_watts(watts_to_dbm(df['peak2_area_W_Hz']) + df['baseline']) / 1e-3, label='Rayleigh Area', s=25)
+	plt.scatter(power, dbm_to_watts(watts_to_dbm(df['peak3_area_W_Hz']) + df['baseline']) / 1e-3, label='Anti-Stokes Area', s=25)
 	plt.xlabel('Input power (mW)')
 	plt.ylabel('Peak Area (mW)')
 	plt.title('Peak Areas vs Input Power')
@@ -94,9 +94,9 @@ def analyseSession_1():
 
 	# Plot 6: x = power, y = area (axes swapped)
 	plt.figure(figsize=(10,6))
-	plt.scatter(power, watts_to_dbm(df['peak1_area_W_Hz']) + df['baseline'], label='Stokes Area', s=5)
-	plt.scatter(power, watts_to_dbm(df['peak2_area_W_Hz']) + df['baseline'], label='Rayleigh Area', s=5)
-	plt.scatter(power, watts_to_dbm(df['peak3_area_W_Hz']) + df['baseline'], label='Anti-Stokes Area', s=5)
+	plt.scatter(power, watts_to_dbm(df['peak1_area_W_Hz']) + df['baseline'], label='Stokes Area', s=25)
+	plt.scatter(power, watts_to_dbm(df['peak2_area_W_Hz']) + df['baseline'], label='Rayleigh Area', s=25)
+	plt.scatter(power, watts_to_dbm(df['peak3_area_W_Hz']) + df['baseline'], label='Anti-Stokes Area', s=25)
 	plt.xlabel('Input power (mW)')
 	plt.ylabel('Peak Area (dBm)')
 	plt.title('Peak Areas vs Input Power')
@@ -462,7 +462,6 @@ def create_g2_plots():
     dedicated analysis folder.
     """
     # --- Configuration ---
-    # NOTE: You might need to adjust these paths to match your computer's file structure.
     base_path_session3 = 'Measurements/Session_3_Photon_Statistics_And_Heterodyne/'
     base_path_session4 = 'Measurements/Session_4_Photon_Statistics_More_Filters_No_Heterodyne/'
 

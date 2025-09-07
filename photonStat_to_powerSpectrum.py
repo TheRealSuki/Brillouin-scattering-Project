@@ -58,7 +58,6 @@ def analyze_session3():
             time_conversion_factor = 1e-10
         else:
             print("Invalid file choice.")
-            # Consider adding 'return' or 'exit()' here if running in a function/script
             file_name = None # Prevents error if the script continues
 
     # --- Setup 2: Cavity Data ---
@@ -75,7 +74,6 @@ def analyze_session3():
     # --- Invalid Setup Choice ---
     else:
         print("Invalid setup choice.")
-        # Consider adding 'return' or 'exit()' here
         file_name = None # Prevents error if the script continues
 
     # --- Final Check ---
